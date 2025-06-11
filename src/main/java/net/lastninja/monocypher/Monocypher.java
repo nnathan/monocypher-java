@@ -75,4 +75,6 @@ public class Monocypher {
   public native void crypto_aead_init_djb(AEAD_ctx ctx, byte[] key, byte[] nonce);
 
   public native void crypto_aead_init_ietf(AEAD_ctx ctx, byte[] key, byte[] nonce);
+
+  public native void crypto_wipe(AEAD_ctx ctx);
 }

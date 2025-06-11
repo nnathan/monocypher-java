@@ -36,7 +36,7 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1verify64
  * Method:    crypto_wipe
  * Signature: ([B)V
  */
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe___3B
   (JNIEnv *, jobject, jbyteArray);
 
 /*
@@ -78,6 +78,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1in
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1ietf
   (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024AEAD_1ctx_2
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }

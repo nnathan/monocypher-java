@@ -654,4 +654,58 @@ public class MonocypherTest {
     assertArrayEquals(key_expected, key_actual, "Key mismatch");
     assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch");
   }
+
+  @Test
+  @Order(23)
+  public void test_crypto_wipe_aead_Pass() throws NoSuchFieldException, IllegalAccessException {
+    AEAD_ctx ctx = mc.new AEAD_ctx();
+    byte[] key = new byte[32];
+    byte[] nonce = new byte[12];
+
+    for (int i = 0; i < key.length; i++) {
+      key[i] = (byte) i;
+    }
+
+    for (int i = 0; i < nonce.length; i++) {
+      nonce[i] = (byte) i;
+    }
+
+    mc.crypto_aead_init_ietf(ctx, key, nonce);
+
+    Field counterField = AEAD_ctx.class.getDeclaredField("counter");
+    Field keyField = AEAD_ctx.class.getDeclaredField("key");
+    Field nonceField = AEAD_ctx.class.getDeclaredField("nonce");
+
+    counterField.setAccessible(true);
+    keyField.setAccessible(true);
+    nonceField.setAccessible(true);
+
+    long counter_actual = counterField.getLong(ctx);
+    byte[] key_actual = (byte[]) keyField.get(ctx);
+    byte[] nonce_actual = (byte[]) nonceField.get(ctx);
+
+    long counter_expected = fromHexLEToLong("0000000000010203");
+    byte[] key_expected =
+        fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    byte[] nonce_expected = fromHexToByteArray("0405060708090a0b");
+
+    assertEquals(counter_expected, counter_actual, "Counter mismatch before wipe");
+    assertArrayEquals(key_expected, key_actual, "Key mismatch before wipe");
+    assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch before wipe");
+
+    mc.crypto_wipe(ctx);
+
+    counter_actual = counterField.getLong(ctx);
+    key_actual = (byte[]) keyField.get(ctx);
+    nonce_actual = (byte[]) nonceField.get(ctx);
+
+    counter_expected = fromHexLEToLong("0000000000000000");
+    key_expected =
+        fromHexToByteArray("0000000000000000000000000000000000000000000000000000000000000000");
+    nonce_expected = fromHexToByteArray("0000000000000000");
+
+    assertEquals(counter_expected, counter_actual, "Counter mismatch after wipe");
+    assertArrayEquals(key_expected, key_actual, "Key mismatch after wipe");
+    assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch after wipe");
+  }
 }

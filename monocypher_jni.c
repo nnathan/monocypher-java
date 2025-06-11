@@ -82,7 +82,7 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1verify64
   return result;
 }
 
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe___3B
   (JNIEnv *env, jobject obj, jbyteArray buf) {
 
   if (buf == NULL) {
@@ -536,3 +536,28 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1in
   (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
   (*env)->ReleaseByteArrayElements(env, nonce, nonce_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024AEAD_1ctx_2
+  (JNIEnv *env, jobject obj, jobject aead_ctx) {
+
+  if (!aead_ctx) {
+    return;
+  }
+
+  jclass ctxClass = (*env)->GetObjectClass(env, aead_ctx);
+  jfieldID fidCounter = (*env)->GetFieldID(env, ctxClass, "counter", "J");
+
+  jfieldID fidKey = (*env)->GetFieldID(env, ctxClass, "key", "[B");
+  jbyteArray keyArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidKey);
+
+  jfieldID fidNonce = (*env)->GetFieldID(env, ctxClass, "nonce", "[B");
+  jbyteArray nonceArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidNonce);
+
+  jbyte key[32] = {0};
+  jbyte nonce[8] = {0};
+
+  (*env)->SetLongField(env, aead_ctx, fidCounter, (jlong)0);
+  (*env)->SetByteArrayRegion(env, keyArray, 0, 32, (const jbyte *)key);
+  (*env)->SetByteArrayRegion(env, nonceArray, 0, 8, (const jbyte *)nonce);
+}
+
