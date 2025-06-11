@@ -80,4 +80,7 @@ public class Monocypher {
 
   public native void crypto_aead_write(
       AEAD_ctx ctx, ByteBuffer cipher_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer plain_text);
+
+  public native int crypto_aead_read(
+      AEAD_ctx ctx, ByteBuffer plain_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer cipher_text);
 }
