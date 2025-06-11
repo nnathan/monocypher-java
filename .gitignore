@@ -16,3 +16,7 @@
 hs_err_pid*
 replay_pid*
 target
+.clangd
+.classpath
+.project
+.settings

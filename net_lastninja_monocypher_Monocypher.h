@@ -47,6 +47,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1lock
   (JNIEnv *, jobject, jobject, jobject, jbyteArray, jobject, jobject, jobject);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_aead_unlock
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;[BLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1unlock
+  (JNIEnv *, jobject, jobject, jobject, jbyteArray, jobject, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

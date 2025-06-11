@@ -54,4 +54,12 @@ public class Monocypher {
       ByteBuffer nonce,
       ByteBuffer ad,
       ByteBuffer plain_text);
+
+  public native int crypto_aead_unlock(
+      ByteBuffer plain_text,
+      ByteBuffer mac,
+      byte[] key,
+      ByteBuffer nonce,
+      ByteBuffer ad,
+      ByteBuffer cipher_text);
 }

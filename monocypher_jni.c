@@ -222,3 +222,125 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1lo
 
   (*env)->ReleaseByteArrayElements(env, key, jkey_ptr, JNI_ABORT);
 }
+
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1unlock(
+  JNIEnv *env,
+  jobject obj,
+  jobject plain_text,
+  jobject mac,
+  jbyteArray key,
+  jobject nonce,
+  jobject ad,
+  jobject cipher_text) {
+
+  // If npeClass is NULL, the JVM will already have thrown a ClassNotFoundException
+  if (!plain_text) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "plain_text cannot be null");
+    return -1;
+  }
+
+  if (!mac) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "mac cannot be null");
+    return -1;
+  }
+
+  if (!key) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "key cannot be null");
+    return -1;
+  }
+
+  if (!nonce) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "nonce cannot be null");
+    return -1;
+  }
+
+  if (!cipher_text) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "cipher_text cannot be null");
+    return -1;
+  }
+
+  jclass bufferClass = (*env)->FindClass(env, "java/nio/ByteBuffer");
+  jmethodID isDirect = (*env)->GetMethodID(env, bufferClass, "isDirect", "()Z");
+
+  if (!(*env)->CallBooleanMethod(env, plain_text, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "plain_text must be a direct ByteBuffer");
+    return -1;
+  }
+
+  if (!(*env)->CallBooleanMethod(env, mac, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "mac must be a direct ByteBuffer");
+    return -1;
+  }
+
+  if (!(*env)->CallBooleanMethod(env, nonce, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "nonce must be a direct ByteBuffer");
+    return -1;
+  }
+
+  if (ad && !(*env)->CallBooleanMethod(env, ad, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "ad must be a direct ByteBuffer");
+    return -1;
+  }
+
+  if (!(*env)->CallBooleanMethod(env, cipher_text, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "cipher_text must be a direct ByteBuffer");
+    return -1;
+  }
+
+  jmethodID remaining = (*env)->GetMethodID(env, bufferClass, "remaining", "()I");
+
+  jint mac_len = (*env)->CallIntMethod(env, mac, remaining);
+  if (mac_len != 16) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "mac must be a buffer of length 16 bytes");
+    return -1;
+  }
+
+  jint nonce_len = (*env)->CallIntMethod(env, nonce, remaining);
+  if (nonce_len != 24) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "nonce must be a buffer of length 24 bytes");
+    return -1;
+  }
+
+  jsize key_len = (*env)->GetArrayLength(env, key);
+  if (key_len != 32) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "key must be a byte array of length 32 bytes");
+    return -1;
+  }
+
+  uint8_t *pt_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, plain_text);
+  uint8_t *mac_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, mac);
+  jbyte *jkey_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+  const uint8_t *key_ptr = (const uint8_t *)jkey_ptr;
+  const uint8_t *nonce_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, nonce);
+  const uint8_t *ad_ptr = ad ? (uint8_t*)(*env)->GetDirectBufferAddress(env, ad) : NULL;
+  size_t ad_len = (size_t)(ad ? (*env)->CallIntMethod(env, ad, remaining) : 0);
+  uint8_t *ct_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, cipher_text);
+  const size_t ct_len = (size_t)(*env)->CallIntMethod(env, cipher_text, remaining);
+
+  int result = crypto_aead_unlock(
+    pt_ptr,
+    mac_ptr,
+    key_ptr,
+    nonce_ptr,
+    ad_ptr,
+    ad_len,
+    ct_ptr,
+    ct_len);
+
+  (*env)->ReleaseByteArrayElements(env, key, jkey_ptr, JNI_ABORT);
+
+  return result;
+}
