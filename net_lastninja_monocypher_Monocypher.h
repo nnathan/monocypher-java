@@ -55,6 +55,30 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1lo
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1unlock
   (JNIEnv *, jobject, jobject, jobject, jbyteArray, jobject, jobject, jobject);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_aead_init_x
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1x
+  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_aead_init_djb
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1djb
+  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_aead_init_ietf
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1ietf
+  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

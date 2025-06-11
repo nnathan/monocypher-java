@@ -62,4 +62,17 @@ public class Monocypher {
       ByteBuffer nonce,
       ByteBuffer ad,
       ByteBuffer cipher_text);
+
+  @SuppressWarnings("unused")
+  public class AEAD_ctx {
+    private long counter;
+    private byte[] key = new byte[32];
+    private byte[] nonce = new byte[8];
+  }
+
+  public native void crypto_aead_init_x(AEAD_ctx ctx, byte[] key, byte[] nonce);
+
+  public native void crypto_aead_init_djb(AEAD_ctx ctx, byte[] key, byte[] nonce);
+
+  public native void crypto_aead_init_ietf(AEAD_ctx ctx, byte[] key, byte[] nonce);
 }

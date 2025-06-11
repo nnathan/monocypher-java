@@ -344,3 +344,195 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1un
 
   return result;
 }
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1x(
+  JNIEnv *env,
+  jobject obj,
+  jobject aead_ctx,
+  jbyteArray key,
+  jbyteArray nonce) {
+
+  // If npeClass is NULL, the JVM will already have thrown a ClassNotFoundException
+  if (!aead_ctx) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "ctx cannot be null");
+    return;
+  }
+
+  if (!key) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "key cannot be null");
+    return;
+  }
+
+  if (!nonce) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "nonce cannot be null");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, key) != 32) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "Key byte array must be 32 bytes long");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, nonce) != 24) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "nonce byte array must be 24 bytes long");
+    return;
+  }
+
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+  jbyte *nonce_ptr = (*env)->GetByteArrayElements(env, nonce, NULL);
+
+  jclass ctxClass = (*env)->GetObjectClass(env, aead_ctx);
+  jfieldID fidCounter = (*env)->GetFieldID(env, ctxClass, "counter", "J");
+
+  jfieldID fidKey = (*env)->GetFieldID(env, ctxClass, "key", "[B");
+  jbyteArray keyArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidKey);
+
+  jfieldID fidNonce = (*env)->GetFieldID(env, ctxClass, "nonce", "[B");
+  jbyteArray nonceArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidNonce);
+
+  crypto_aead_ctx ctx;
+
+  crypto_aead_init_x(&ctx, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr);
+
+  (*env)->SetLongField(env, aead_ctx, fidCounter, (jlong) ctx.counter);
+  (*env)->SetByteArrayRegion(env, keyArray, 0, 32, (const jbyte *)ctx.key);
+  (*env)->SetByteArrayRegion(env, nonceArray, 0, 8, (const jbyte *)ctx.nonce);
+
+  crypto_wipe(&ctx, sizeof(ctx));
+
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, nonce, nonce_ptr, JNI_ABORT);
+}
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1djb(
+  JNIEnv *env,
+  jobject obj,
+  jobject aead_ctx,
+  jbyteArray key,
+  jbyteArray nonce) {
+
+  // If npeClass is NULL, the JVM will already have thrown a ClassNotFoundException
+  if (!aead_ctx) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "ctx cannot be null");
+    return;
+  }
+
+  if (!key) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "key cannot be null");
+    return;
+  }
+
+  if (!nonce) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "nonce cannot be null");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, key) != 32) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "Key byte array must be 32 bytes long");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, nonce) != 8) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "nonce byte array must be 8 bytes long");
+    return;
+  }
+
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+  jbyte *nonce_ptr = (*env)->GetByteArrayElements(env, nonce, NULL);
+
+  jclass ctxClass = (*env)->GetObjectClass(env, aead_ctx);
+  jfieldID fidCounter = (*env)->GetFieldID(env, ctxClass, "counter", "J");
+
+  jfieldID fidKey = (*env)->GetFieldID(env, ctxClass, "key", "[B");
+  jbyteArray keyArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidKey);
+
+  jfieldID fidNonce = (*env)->GetFieldID(env, ctxClass, "nonce", "[B");
+  jbyteArray nonceArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidNonce);
+
+  crypto_aead_ctx ctx;
+
+  crypto_aead_init_djb(&ctx, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr);
+
+  (*env)->SetLongField(env, aead_ctx, fidCounter, (jlong) ctx.counter);
+  (*env)->SetByteArrayRegion(env, keyArray, 0, 32, (const jbyte *)ctx.key);
+  (*env)->SetByteArrayRegion(env, nonceArray, 0, 8, (const jbyte *)ctx.nonce);
+
+  crypto_wipe(&ctx, sizeof(ctx));
+
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, nonce, nonce_ptr, JNI_ABORT);
+}
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1ietf(
+  JNIEnv *env,
+  jobject obj,
+  jobject aead_ctx,
+  jbyteArray key,
+  jbyteArray nonce) {
+
+  // If npeClass is NULL, the JVM will already have thrown a ClassNotFoundException
+  if (!aead_ctx) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "ctx cannot be null");
+    return;
+  }
+
+  if (!key) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "key cannot be null");
+    return;
+  }
+
+  if (!nonce) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "nonce cannot be null");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, key) != 32) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "Key byte array must be 32 bytes long");
+    return;
+  }
+
+  if ((*env)->GetArrayLength(env, nonce) != 12) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "nonce byte array must be 12 bytes long");
+    return;
+  }
+
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+  jbyte *nonce_ptr = (*env)->GetByteArrayElements(env, nonce, NULL);
+
+  jclass ctxClass = (*env)->GetObjectClass(env, aead_ctx);
+  jfieldID fidCounter = (*env)->GetFieldID(env, ctxClass, "counter", "J");
+
+  jfieldID fidKey = (*env)->GetFieldID(env, ctxClass, "key", "[B");
+  jbyteArray keyArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidKey);
+
+  jfieldID fidNonce = (*env)->GetFieldID(env, ctxClass, "nonce", "[B");
+  jbyteArray nonceArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidNonce);
+
+  crypto_aead_ctx ctx;
+
+  crypto_aead_init_ietf(&ctx, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr);
+
+  (*env)->SetLongField(env, aead_ctx, fidCounter, (jlong) ctx.counter);
+  (*env)->SetByteArrayRegion(env, keyArray, 0, 32, (const jbyte *)ctx.key);
+  (*env)->SetByteArrayRegion(env, nonceArray, 0, 8, (const jbyte *)ctx.nonce);
+
+  crypto_wipe(&ctx, sizeof(ctx));
+
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, nonce, nonce_ptr, JNI_ABORT);
+}

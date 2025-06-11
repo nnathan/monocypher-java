@@ -1,7 +1,9 @@
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import net.lastninja.monocypher.Monocypher;
+import net.lastninja.monocypher.Monocypher.AEAD_ctx;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -336,7 +338,7 @@ public class MonocypherTest {
     assertEquals(expected, actual);
   }
 
-  private static ByteBuffer fromHex(String hex) {
+  private static ByteBuffer fromHexToByteBuffer(String hex) {
     int len = hex.length();
     if (len % 2 != 0) {
       throw new IllegalArgumentException("Hex string must have even length");
@@ -377,9 +379,9 @@ public class MonocypherTest {
     }
 
     ByteBuffer cipher_text =
-        fromHex(
+        fromHexToByteBuffer(
             "a9b575a2b4f903d98a2e96cff1ee0c38085fdf4de47fcfafbecd883596be8ed77179afc37aaa826a2995dc54eed427ea14431a0e87b43239f835caffef109ef3");
-    ByteBuffer mac = fromHex("6a17088c55c90308e787ed60f8e7fdd7");
+    ByteBuffer mac = fromHexToByteBuffer("6a17088c55c90308e787ed60f8e7fdd7");
     ByteBuffer plain_text = ByteBuffer.allocateDirect(cipher_text.limit());
 
     int result = mc.crypto_aead_unlock(plain_text, mac, key, nonce, ad, cipher_text);
@@ -411,9 +413,9 @@ public class MonocypherTest {
     }
 
     ByteBuffer cipher_text =
-        fromHex(
+        fromHexToByteBuffer(
             "a9b575a2b4f903d98a2e96cff1ee0c38085fdf4de47fcfafbecd883596be8ed77179afc37aaa826a2995dc54eed427ea14431a0e87b43239f835caffef109ef3");
-    ByteBuffer mac = fromHex("3c5d023efcae618eaee3bfcd2503ede5");
+    ByteBuffer mac = fromHexToByteBuffer("3c5d023efcae618eaee3bfcd2503ede5");
     ByteBuffer plain_text = ByteBuffer.allocateDirect(cipher_text.limit());
 
     int result = mc.crypto_aead_unlock(plain_text, mac, key, nonce, null, cipher_text);
@@ -432,7 +434,7 @@ public class MonocypherTest {
   public void test_crypto_aead_unlock_inplace_with_ad_Pass() {
     byte[] key = new byte[32];
     ByteBuffer encrypted_message =
-        fromHex(
+        fromHexToByteBuffer(
             "4141414141414141414141414141414141414141414141416a17088c55c90308e787ed60f8e7fdd7424242424242424242424242424242424242424242424242a9b575a2b4f903d98a2e96cff1ee0c38085fdf4de47fcfafbecd883596be8ed77179afc37aaa826a2995dc54eed427ea14431a0e87b43239f835caffef109ef3");
 
     ByteBuffer nonce = encrypted_message.duplicate();
@@ -470,7 +472,7 @@ public class MonocypherTest {
   public void test_crypto_aead_unlock_inplace_without_ad_Pass() {
     byte[] key = new byte[32];
     ByteBuffer encrypted_message =
-        fromHex(
+        fromHexToByteBuffer(
             "4141414141414141414141414141414141414141414141413c5d023efcae618eaee3bfcd2503ede5000000000000000000000000000000000000000000000000a9b575a2b4f903d98a2e96cff1ee0c38085fdf4de47fcfafbecd883596be8ed77179afc37aaa826a2995dc54eed427ea14431a0e87b43239f835caffef109ef3");
 
     ByteBuffer nonce = encrypted_message.duplicate();
@@ -496,5 +498,160 @@ public class MonocypherTest {
     String actual = toHex(encrypted_message);
 
     assertEquals(expected, actual);
+  }
+
+  private static byte[] fromHexToByteArray(String hex) {
+    int len = hex.length();
+    if (len % 2 != 0) {
+      throw new IllegalArgumentException("Hex string must have even length");
+    }
+
+    byte[] result = new byte[len / 2];
+    for (int i = 0; i < len; i += 2) {
+      result[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
+    }
+
+    return result;
+  }
+
+  private static long fromHexLEToLong(String hex) {
+    if (hex.length() != 16) {
+      throw new IllegalArgumentException("Hex string must be exactly 16 characters for 8 bytes");
+    }
+
+    long result = 0;
+    for (int i = 0; i < 8; i++) {
+      int byteIndex = i * 2;
+      int value = Integer.parseInt(hex.substring(byteIndex, byteIndex + 2), 16);
+      result |= ((long) value & 0xFF) << (8 * i); // little-endian shift
+    }
+
+    return result;
+  }
+
+  private static String toHex(byte[] buffer) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < buffer.length; i++) {
+      sb.append(String.format("%02x", buffer[i]));
+    }
+    return sb.toString();
+  }
+
+  @Test
+  @Order(20)
+  public void test_crypto_aead_init_x_Pass() throws NoSuchFieldException, IllegalAccessException {
+    AEAD_ctx ctx = mc.new AEAD_ctx();
+    byte[] key = new byte[32];
+    byte[] nonce = new byte[24];
+
+    for (int i = 0; i < key.length; i++) {
+      key[i] = (byte) i;
+    }
+
+    for (int i = 0; i < nonce.length; i++) {
+      nonce[i] = (byte) i;
+    }
+
+    mc.crypto_aead_init_x(ctx, key, nonce);
+
+    Field counterField = AEAD_ctx.class.getDeclaredField("counter");
+    Field keyField = AEAD_ctx.class.getDeclaredField("key");
+    Field nonceField = AEAD_ctx.class.getDeclaredField("nonce");
+
+    counterField.setAccessible(true);
+    keyField.setAccessible(true);
+    nonceField.setAccessible(true);
+
+    long counter_actual = counterField.getLong(ctx);
+    byte[] key_actual = (byte[]) keyField.get(ctx);
+    byte[] nonce_actual = (byte[]) nonceField.get(ctx);
+
+    long counter_expected = fromHexLEToLong("0000000000000000");
+    byte[] key_expected =
+        fromHexToByteArray("51e3ff45a895675c4b33b46c64f4a9ace110d34df6a2ceab486372bacbd3eff6");
+    byte[] nonce_expected = fromHexToByteArray("1011121314151617");
+
+    assertEquals(counter_expected, counter_actual, "Counter mismatch");
+    assertArrayEquals(key_expected, key_actual, "Key mismatch");
+    assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch");
+  }
+
+  @Test
+  @Order(21)
+  public void test_crypto_aead_init_djb_Pass() throws NoSuchFieldException, IllegalAccessException {
+    AEAD_ctx ctx = mc.new AEAD_ctx();
+    byte[] key = new byte[32];
+    byte[] nonce = new byte[8];
+
+    for (int i = 0; i < key.length; i++) {
+      key[i] = (byte) i;
+    }
+
+    for (int i = 0; i < nonce.length; i++) {
+      nonce[i] = (byte) i;
+    }
+
+    mc.crypto_aead_init_djb(ctx, key, nonce);
+
+    Field counterField = AEAD_ctx.class.getDeclaredField("counter");
+    Field keyField = AEAD_ctx.class.getDeclaredField("key");
+    Field nonceField = AEAD_ctx.class.getDeclaredField("nonce");
+
+    counterField.setAccessible(true);
+    keyField.setAccessible(true);
+    nonceField.setAccessible(true);
+
+    long counter_actual = counterField.getLong(ctx);
+    byte[] key_actual = (byte[]) keyField.get(ctx);
+    byte[] nonce_actual = (byte[]) nonceField.get(ctx);
+
+    long counter_expected = fromHexLEToLong("0000000000000000");
+    byte[] key_expected =
+        fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    byte[] nonce_expected = fromHexToByteArray("0001020304050607");
+
+    assertEquals(counter_expected, counter_actual, "Counter mismatch");
+    assertArrayEquals(key_expected, key_actual, "Key mismatch");
+    assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch");
+  }
+
+  @Test
+  @Order(22)
+  public void test_crypto_aead_init_ietf_Pass()
+      throws NoSuchFieldException, IllegalAccessException {
+    AEAD_ctx ctx = mc.new AEAD_ctx();
+    byte[] key = new byte[32];
+    byte[] nonce = new byte[12];
+
+    for (int i = 0; i < key.length; i++) {
+      key[i] = (byte) i;
+    }
+
+    for (int i = 0; i < nonce.length; i++) {
+      nonce[i] = (byte) i;
+    }
+
+    mc.crypto_aead_init_ietf(ctx, key, nonce);
+
+    Field counterField = AEAD_ctx.class.getDeclaredField("counter");
+    Field keyField = AEAD_ctx.class.getDeclaredField("key");
+    Field nonceField = AEAD_ctx.class.getDeclaredField("nonce");
+
+    counterField.setAccessible(true);
+    keyField.setAccessible(true);
+    nonceField.setAccessible(true);
+
+    long counter_actual = counterField.getLong(ctx);
+    byte[] key_actual = (byte[]) keyField.get(ctx);
+    byte[] nonce_actual = (byte[]) nonceField.get(ctx);
+
+    long counter_expected = fromHexLEToLong("0000000000010203");
+    byte[] key_expected =
+        fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    byte[] nonce_expected = fromHexToByteArray("0405060708090a0b");
+
+    assertEquals(counter_expected, counter_actual, "Counter mismatch");
+    assertArrayEquals(key_expected, key_actual, "Key mismatch");
+    assertArrayEquals(nonce_expected, nonce_actual, "Nonce mismatch");
   }
 }
