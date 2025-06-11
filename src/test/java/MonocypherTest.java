@@ -1339,4 +1339,146 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(14)
+  public void test_crypto_blake2b_keyed() {
+    // blake2b keyed with 1 byte hash and 1 byte key
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(1);
+      ByteBuffer key = fromHexToByteBuffer("00");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
+
+      mc.crypto_blake2b_keyed(hash, key, message);
+
+      String expected = "6a";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b keyed with 32 byte hash and 32 byte key
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(32);
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
+
+      mc.crypto_blake2b_keyed(hash, key, message);
+
+      String expected = "04b80510e5e9ad383d1a354f2d7cfb7ada56caefa6de9e17989316701975b384";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b keyed with 64 byte hash and 64 byte key
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(64);
+      ByteBuffer key =
+          fromHexToByteBuffer(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
+
+      mc.crypto_blake2b_keyed(hash, key, message);
+
+      String expected =
+          "380beaf6ea7cc9365e270ef0e6f3a64fb902acae51dd5512f84259ad2c91f4bc4108db73192a5bbfb0cbcf71e46c3e21aee1c5e860dc96e8eb0b7b8426e6abe9";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b keyed with 32 byte hash and null key and message
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(32);
+      ByteBuffer key = null;
+      ByteBuffer message = null;
+
+      mc.crypto_blake2b_keyed(hash, key, message);
+
+      String expected = "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b keyed with 32 byte hash and 32 byte key (inplace)
+    {
+      ByteBuffer hash =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
+
+      mc.crypto_blake2b_keyed(hash, hash, message);
+
+      String expected = "04b80510e5e9ad383d1a354f2d7cfb7ada56caefa6de9e17989316701975b384";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b keyed with invalid hash size of 0
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(0);
+      ByteBuffer key = null;
+      ByteBuffer message = null;
+
+      try {
+        mc.crypto_blake2b_keyed(hash, key, message);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "hash must be a buffer of length between (inclusive) 1 and 64 bytes", e.getMessage());
+      }
+    }
+
+    // blake2b keyed with invalid hash size of 65
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(65);
+      ByteBuffer key = null;
+      ByteBuffer message = null;
+
+      try {
+        mc.crypto_blake2b_keyed(hash, key, message);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "hash must be a buffer of length between (inclusive) 1 and 64 bytes", e.getMessage());
+      }
+    }
+
+    // blake2b keyed with null hash object (exception thrown)
+    {
+      ByteBuffer hash = null;
+      ByteBuffer key = null;
+      ByteBuffer message = null;
+
+      try {
+        mc.crypto_blake2b_keyed(hash, key, message);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("hash cannot be null", e.getMessage());
+      }
+    }
+
+    // blake2b keyed with invalid key size object (exception thrown)
+    {
+      ByteBuffer hash = ByteBuffer.allocateDirect(64);
+      ByteBuffer key = ByteBuffer.allocateDirect(65);
+      ByteBuffer message = null;
+
+      try {
+        mc.crypto_blake2b_keyed(hash, key, message);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "key must be a buffer of length between (inclusive) 0 and 64 bytes", e.getMessage());
+      }
+    }
+  }
 }

@@ -586,6 +586,16 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1re
   return result;
 }
 
+#define ENSURE_ARRAY_LENGTH_BETWEEN(array_var, start, end, ret_val) \
+  do { \
+    jint len = (*env)->GetArrayLength(env, array_var); \
+    if (len < start || len > end) { \
+      jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException"); \
+      (*env)->ThrowNew(env, exc, #array_var " must be an array of length between (inclusive) " #start " and " #end " bytes"); \
+      return ret_val; \
+    } \
+  } while (0)
+
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b(
   JNIEnv *env,
   jobject obj,
@@ -596,34 +606,86 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b(
 
   CHECK_NULL(hash, );
 
-  jint hash_len = (*env)->GetArrayLength(env, hash);
-  if (hash_len < 1 || hash_len > 64) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException"); \
-    (*env)->ThrowNew(
-      env,
-      exc,
-      "hash must be an array of length between (inclusive) 1 and 64 bytes");
-    return;
-  }
+  ENSURE_ARRAY_LENGTH_BETWEEN(hash, 1, 64, );
 
   jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
+  jint hash_len = (*env)->GetArrayLength(env, hash);
 
-  if (!message) {
-    crypto_blake2b((uint8_t *)hash_ptr, (size_t)hash_len, NULL, 0);
-    (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
-    return;
+  jint msg_len = 0;
+  jbyte *msg_ptr = NULL;
+
+  if (message) {
+    msg_len = (*env)->GetArrayLength(env, message);
+    msg_ptr = (*env)->GetByteArrayElements(env, message, NULL);
   }
-
-  jbyte *msg_ptr = (*env)->GetByteArrayElements(env, message, NULL);
-  jint msg_len = (*env)->GetArrayLength(env, message);
 
   crypto_blake2b(
     (uint8_t *)hash_ptr,
     (size_t)hash_len,
     (const uint8_t *)msg_ptr,
-    msg_len);
+    (size_t)msg_len);
 
   (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, message, msg_ptr, JNI_ABORT);
+  if (message) {
+    (*env)->ReleaseByteArrayElements(env, message, msg_ptr, JNI_ABORT);
+  }
+}
+
+#define ENSURE_BYTE_BUFFER_LENGTH_BETWEEN(class_var, bb_var, start, end, ret_val) \
+  do { \
+    jint len = (*env)->CallIntMethod(env, bb_var, class_var##_remaining); \
+    if (len < start || len > end) { \
+      jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException"); \
+      (*env)->ThrowNew(env, exc, #bb_var " must be a buffer of length between (inclusive) " #start " and " #end " bytes"); \
+      return ret_val; \
+    } \
+  } while (0)
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed(
+  JNIEnv *env,
+  jobject obj,
+  jobject hash,
+  jobject key,
+  jobject message) {
+
+  (void)obj;
+
+  CHECK_NULL(hash, );
+
+  INIT_BYTE_BUFFER_CLASS(bbClass);
+
+  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, hash, );
+  if (key) { ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, hash, ); }
+  if (message) { ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, message, ); }
+
+  ENSURE_BYTE_BUFFER_LENGTH_BETWEEN(bbClass, hash, 1, 64, );
+  if (key) { ENSURE_BYTE_BUFFER_LENGTH_BETWEEN(bbClass, key, 0, 64, ); }
+
+  jbyte *hash_ptr = (*env)->GetDirectBufferAddress(env, hash);
+  jint hash_len = (*env)->CallIntMethod(env, hash, bbClass_remaining);
+
+  jbyte *key_ptr = NULL;
+  jint key_len = 0;
+
+  if (key) {
+    key_ptr = (*env)->GetDirectBufferAddress(env, key);
+    key_len = (*env)->CallIntMethod(env, key, bbClass_remaining);
+  }
+
+  jbyte *msg_ptr = NULL;
+  jint msg_len = 0;
+
+  if (message) {
+    msg_ptr = (*env)->GetDirectBufferAddress(env, message);
+    msg_len = (*env)->CallIntMethod(env, message, bbClass_remaining);
+  }
+
+  crypto_blake2b_keyed(
+    (uint8_t *)hash_ptr,
+    (size_t)hash_len,
+    (const uint8_t *)key_ptr,
+    (size_t)key_len,
+    (const uint8_t *)msg_ptr,
+    (size_t)msg_len);
 }
 
