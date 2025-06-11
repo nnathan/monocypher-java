@@ -1237,4 +1237,106 @@ public class MonocypherTest {
       assertEquals(result, -1);
     }
   }
+
+  @Test
+  @Order(13)
+  public void test_crypto_blake2b() {
+    // blake2b with 1 byte hash
+    {
+      byte[] hash = new byte[1];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_blake2b(hash, message);
+
+      String expected = "42";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b with 32 byte hash
+    {
+      byte[] hash = new byte[32];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_blake2b(hash, message);
+
+      String expected = "77065d25b622a8251094d869edf6b4e9ba0708a8db1f239cb68e4eeb45851621";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b with 64 byte hash
+    {
+      byte[] hash = new byte[64];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_blake2b(hash, message);
+
+      String expected =
+          "e998e0dc03ec30eb99bb6bfaaf6618acc620320d7220b3af2b23d112d8e9cb1262f3c0d60d183b1ee7f096d12dae42c958418600214d04f5ed6f5e718be35566";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b with 32 byte hash on empty message
+    {
+      byte[] hash = new byte[32];
+      byte[] message = null;
+
+      mc.crypto_blake2b(hash, message);
+
+      String expected = "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8";
+
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual);
+    }
+
+    // blake2b with invalid hash size of 0
+    {
+      byte[] hash = new byte[0];
+      byte[] message = null;
+
+      try {
+        mc.crypto_blake2b(hash, message);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "hash must be an array of length between (inclusive) 1 and 64 bytes", e.getMessage());
+      }
+    }
+
+    // blake2b with invalid hash size of 65
+    {
+      byte[] hash = new byte[65];
+      byte[] message = null;
+
+      try {
+        mc.crypto_blake2b(hash, message);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "hash must be an array of length between (inclusive) 1 and 64 bytes", e.getMessage());
+      }
+    }
+
+    // blake2b with null hash object (exception thrown)
+    {
+      byte[] hash = null;
+      byte[] message = null;
+
+      try {
+        mc.crypto_blake2b(hash, message);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("hash cannot be null", e.getMessage());
+      }
+    }
+  }
 }

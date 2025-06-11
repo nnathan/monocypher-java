@@ -585,3 +585,45 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1re
 
   return result;
 }
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b(
+  JNIEnv *env,
+  jobject obj,
+  jbyteArray hash,
+  jbyteArray message) {
+
+  (void)obj;
+
+  CHECK_NULL(hash, );
+
+  jint hash_len = (*env)->GetArrayLength(env, hash);
+  if (hash_len < 1 || hash_len > 64) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException"); \
+    (*env)->ThrowNew(
+      env,
+      exc,
+      "hash must be an array of length between (inclusive) 1 and 64 bytes");
+    return;
+  }
+
+  jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
+
+  if (!message) {
+    crypto_blake2b((uint8_t *)hash_ptr, (size_t)hash_len, NULL, 0);
+    (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
+    return;
+  }
+
+  jbyte *msg_ptr = (*env)->GetByteArrayElements(env, message, NULL);
+  jint msg_len = (*env)->GetArrayLength(env, message);
+
+  crypto_blake2b(
+    (uint8_t *)hash_ptr,
+    (size_t)hash_len,
+    (const uint8_t *)msg_ptr,
+    msg_len);
+
+  (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, message, msg_ptr, JNI_ABORT);
+}
+

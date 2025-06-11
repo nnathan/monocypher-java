@@ -103,6 +103,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1wr
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1read
   (JNIEnv *, jobject, jobject, jobject, jobject, jobject, jobject);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_blake2b
+ * Signature: ([B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b
+  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

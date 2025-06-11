@@ -83,4 +83,6 @@ public class Monocypher {
 
   public native int crypto_aead_read(
       AEAD_ctx ctx, ByteBuffer plain_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer cipher_text);
+
+  public native void crypto_blake2b(byte[] hash, byte[] message);
 }
