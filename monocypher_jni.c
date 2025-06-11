@@ -561,3 +561,118 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Ln
   (*env)->SetByteArrayRegion(env, nonceArray, 0, 8, (const jbyte *)nonce);
 }
 
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1write(
+  JNIEnv *env,
+  jobject obj,
+  jobject aead_ctx,
+  jobject cipher_text,
+  jobject mac,
+  jobject ad,
+  jobject plain_text) {
+
+   // If npeClass is NULL, the JVM will already have thrown a ClassNotFoundException
+  if (!aead_ctx) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "ctx cannot be null");
+    return;
+  }
+
+  if (!cipher_text) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "cipher_text cannot be null");
+    return;
+  }
+
+  if (!mac) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "mac cannot be null");
+    return;
+  }
+
+  if (!plain_text) {
+    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
+    (*env)->ThrowNew(env, npeClass, "plain_text cannot be null");
+    return;
+  }
+
+  jclass bufferClass = (*env)->FindClass(env, "java/nio/ByteBuffer");
+  jmethodID isDirect = (*env)->GetMethodID(env, bufferClass, "isDirect", "()Z");
+
+  if (!(*env)->CallBooleanMethod(env, cipher_text, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "cipher_text must be a direct ByteBuffer");
+    return;
+  }
+
+  if (!(*env)->CallBooleanMethod(env, mac, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "mac must be a direct ByteBuffer");
+    return;
+  }
+
+  if (ad && !(*env)->CallBooleanMethod(env, ad, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "ad must be a direct ByteBuffer");
+    return;
+  }
+
+  if (!(*env)->CallBooleanMethod(env, plain_text, isDirect)) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "plain_text must be a direct ByteBuffer");
+    return;
+  }
+
+  jmethodID remaining = (*env)->GetMethodID(env, bufferClass, "remaining", "()I");
+
+  jint mac_len = (*env)->CallIntMethod(env, mac, remaining);
+  if (mac_len != 16) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    (*env)->ThrowNew(env, exc, "mac must be a buffer of length 16 bytes");
+    return;
+  }
+
+  jclass ctxClass = (*env)->GetObjectClass(env, aead_ctx);
+  jfieldID fidCounter = (*env)->GetFieldID(env, ctxClass, "counter", "J");
+
+  jfieldID fidKey = (*env)->GetFieldID(env, ctxClass, "key", "[B");
+  jbyteArray keyArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidKey);
+
+  jfieldID fidNonce = (*env)->GetFieldID(env, ctxClass, "nonce", "[B");
+  jbyteArray nonceArray = (jbyteArray)(*env)->GetObjectField(env, aead_ctx, fidNonce);
+
+  crypto_aead_ctx ctx;
+
+  ctx.counter = (uint64_t)(*env)->GetLongField(env, aead_ctx, fidCounter);
+
+  jbyte *aead_ctx_key_ptr = (*env)->GetByteArrayElements(env, keyArray, NULL);
+  for (int i = 0; i < 32; i++) {
+    ctx.key[i] = (uint8_t)aead_ctx_key_ptr[i];
+  }
+
+  jbyte *aead_ctx_nonce_ptr = (*env)->GetByteArrayElements(env, nonceArray, NULL);
+  for (int i = 0; i < 8; i++) {
+    ctx.nonce[i] = (uint8_t)aead_ctx_nonce_ptr[i];
+  }
+
+  uint8_t *ct_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, cipher_text);
+  uint8_t *mac_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, mac);
+  const uint8_t *ad_ptr = ad ? (uint8_t*)(*env)->GetDirectBufferAddress(env, ad) : NULL;
+  size_t ad_len = (size_t)(ad ? (*env)->CallIntMethod(env, ad, remaining) : 0);
+  uint8_t *pt_ptr = (uint8_t*)(*env)->GetDirectBufferAddress(env, plain_text);
+  const size_t pt_len = (size_t)(*env)->CallIntMethod(env, plain_text, remaining);
+
+  crypto_aead_write(&ctx, ct_ptr, mac_ptr, ad_ptr, ad_len, pt_ptr, pt_len);
+
+  (*env)->SetLongField(env, aead_ctx, fidCounter, (jlong)ctx.counter);
+
+  for (int i = 0; i < 32; i++) {
+    aead_ctx_key_ptr[i] = (jbyte)ctx.key[i];
+  }
+  (*env)->ReleaseByteArrayElements(env, keyArray, aead_ctx_key_ptr, 0);
+
+  for (int i = 0; i < 8; i++) {
+    aead_ctx_nonce_ptr[i] = (jbyte)ctx.nonce[i];
+  }
+  (*env)->ReleaseByteArrayElements(env, nonceArray, aead_ctx_nonce_ptr, 0);
+}
+
