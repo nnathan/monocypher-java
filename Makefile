@@ -10,6 +10,8 @@ else
   $(error Unsupported HOST_OS: $(HOST_OS))
 endif
 JNI_PLATFORM ?= $(HOST_OS)
+CFLAGS += -Wall
+CFLAGS += -Wextra
 CFLAGS += -fPIC
 CFLAGS += -I"$(JAVA_HOME)/include"
 CFLAGS += -I"$(JAVA_HOME)/include/$(JNI_PLATFORM)" -O3

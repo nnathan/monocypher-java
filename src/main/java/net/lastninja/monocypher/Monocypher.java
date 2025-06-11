@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public class Monocypher {
   static {
@@ -45,4 +46,12 @@ public class Monocypher {
   public native int crypto_verify64(byte[] a, byte[] b);
 
   public native void crypto_wipe(byte[] buf);
+
+  public native void crypto_aead_lock(
+      ByteBuffer cipher_text,
+      ByteBuffer mac,
+      byte[] key,
+      ByteBuffer nonce,
+      ByteBuffer ad,
+      ByteBuffer plain_text);
 }
