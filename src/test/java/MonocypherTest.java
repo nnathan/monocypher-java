@@ -493,6 +493,40 @@ public class MonocypherTest {
 
       assertEquals(expected, actual);
     }
+
+    // sad path: with ad (detached)
+    {
+      byte[] key = new byte[32];
+
+      for (int i = 0; i < key.length; i++) {
+        key[i] = (byte) i;
+      }
+
+      ByteBuffer ad = ByteBuffer.allocateDirect(24);
+      ByteBuffer nonce = ByteBuffer.allocateDirect(24);
+
+      {
+        ByteBuffer tmp = nonce.duplicate();
+        tmp.position(0);
+        while (tmp.hasRemaining()) tmp.put((byte) 0x41);
+      }
+
+      {
+        ByteBuffer tmp = ad.duplicate();
+        tmp.position(0);
+        while (tmp.hasRemaining()) tmp.put((byte) 0x42);
+      }
+
+      ByteBuffer cipher_text =
+          fromHexToByteBuffer(
+              "a9b575a2b4f903d98a2e96cff1ee0c38085fdf4de47fcfafbecd883596be8ed77179afc37aaa826a2995dc54eed427ea14431a0e87b43239f835caffef109ef3");
+      ByteBuffer mac = fromHexToByteBuffer("00000000000000000000000000000000"); // perturbed
+      ByteBuffer plain_text = ByteBuffer.allocateDirect(cipher_text.limit());
+
+      int result = mc.crypto_aead_unlock(plain_text, mac, key, nonce, ad, cipher_text);
+
+      assertEquals(result, -1);
+    }
   }
 
   private static byte[] fromHexToByteArray(String hex) {
