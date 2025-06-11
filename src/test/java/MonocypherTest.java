@@ -111,4 +111,20 @@ public class MonocypherTest {
       assertEquals("Both arrays must be 64 bytes long", e.getMessage());
     }
   }
+
+  @Test
+  public void test_crypto_wipe_Pass() {
+    byte[] actual = new byte[] {(byte) 0xaa, (byte) 0xbb};
+    byte[] expected = new byte[] {(byte) 0x00, (byte) 0x00};
+
+    mc.crypto_wipe(actual);
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  public void test_crypto_wipe_nullptr_Pass() {
+    byte[] actual = null;
+
+    mc.crypto_wipe(actual);
+  }
 }

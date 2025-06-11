@@ -85,3 +85,23 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1verify64
 
   return result;
 }
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe
+  (JNIEnv *env, jobject obj, jbyteArray buf) {
+
+  if (buf == NULL) {
+    return;
+  }
+
+  jsize len = (*env)->GetArrayLength(env, buf);
+  jbyte* ptr = (*env)->GetByteArrayElements(env, buf, NULL);
+  if (ptr == NULL) {
+    return;
+  }
+
+  crypto_wipe((void *) ptr, (size_t) len);
+
+  (*env)->ReleaseByteArrayElements(env, buf, ptr, 0);
+
+  return;
+}

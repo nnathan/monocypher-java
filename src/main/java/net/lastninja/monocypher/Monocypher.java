@@ -43,4 +43,6 @@ public class Monocypher {
   public native int crypto_verify32(byte[] a, byte[] b);
 
   public native int crypto_verify64(byte[] a, byte[] b);
+
+  public native void crypto_wipe(byte[] buf);
 }
