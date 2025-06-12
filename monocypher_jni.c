@@ -1331,3 +1331,39 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1key_1pair(
   (*env)->ReleaseByteArrayElements(env, public_key, public_key_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, seed, seed_ptr, 0);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1sign(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray signature,
+    jbyteArray secret_key,
+    jbyteArray message) {
+  (void)obj;
+
+  CHECK_NULL(signature, );
+  CHECK_NULL(secret_key, );
+
+  ENSURE_ARRAY_LENGTH(signature, 64, );
+  ENSURE_ARRAY_LENGTH(secret_key, 64, );
+
+  jbyte *message_ptr = NULL;
+  jint message_len = 0;
+
+  if (message) {
+    message_ptr = (*env)->GetByteArrayElements(env, message, NULL);
+    message_len = (*env)->GetArrayLength(env, message);
+  }
+
+  jbyte *signature_ptr = (*env)->GetByteArrayElements(env, signature, NULL);
+  jbyte *secret_key_ptr = (*env)->GetByteArrayElements(env, secret_key, NULL);
+
+  crypto_eddsa_sign((uint8_t *)signature_ptr, (const uint8_t *)secret_key_ptr,
+                    (const uint8_t *)message_ptr, (size_t)message_len);
+
+  (*env)->ReleaseByteArrayElements(env, signature, signature_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, JNI_ABORT);
+  if (message) {
+    (*env)->ReleaseByteArrayElements(env, message, message_ptr, JNI_ABORT);
+  }
+}

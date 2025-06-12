@@ -2677,4 +2677,50 @@ public class MonocypherTest {
       assertEquals(expected, actual, "seed mismatch");
     }
   }
+
+  @Test
+  @Order(28)
+  public void test_crypto_eddsa_sign() {
+    // crypto_eddsa_sign happy path
+    {
+      byte[] secret_key =
+          fromHexToByteArray(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  + "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
+      byte[] signature = new byte[64];
+      byte[] message = null;
+
+      mc.crypto_eddsa_sign(signature, secret_key, message);
+
+      String expected, actual;
+
+      expected =
+          "d137e35f4da1beb4e6628c3af3eeeb335ea769c7ed8489e7aecfdd4fcd4b6207"
+              + "5816f7bb8ae0687e6ce8cf4ae6af52ee5db55981d4ae664101fa32596c281f0d";
+      actual = toHex(signature);
+
+      assertEquals(expected, actual, "signature mismatch");
+    }
+
+    // crypto_eddsa_sign happy path
+    {
+      byte[] secret_key =
+          fromHexToByteArray(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  + "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
+      byte[] signature = new byte[64];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_eddsa_sign(signature, secret_key, message);
+
+      String expected, actual;
+
+      expected =
+          "655434d6865d08dff59d21e4623e03fac0023e456b9110a01a1befddc6a4ab0e"
+              + "b689e628815958b1ef75086c7d56575636b1eb5b58eb83c9e4fa6443f08ccc07";
+      actual = toHex(signature);
+
+      assertEquals(expected, actual, "signature mismatch");
+    }
+  }
 }
