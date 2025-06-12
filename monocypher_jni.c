@@ -810,3 +810,40 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_
   TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
 }
 
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1final(
+  JNIEnv *env,
+  jobject obj,
+  jobject blake2b_ctx,
+  jbyteArray hash) {
+
+  (void)obj;
+
+  CHECK_NULL_WITH_NAME(blake2b_ctx, "ctx", );
+  CHECK_NULL(hash, );
+
+  crypto_blake2b_ctx ctx;
+
+  jint hash_len = (*env)->GetArrayLength(env, hash);
+
+  FROM_BLAKE2_CTX_CLASS(blake2b_ctx, ctx);
+
+  if ((size_t)hash_len != ctx.hash_size) {
+    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    char buf[64];
+    snprintf(buf, sizeof(buf), "hash must be of length %lu bytes", ctx.hash_size);
+    (*env)->ThrowNew(env, exc, buf);
+    return;
+  }
+
+  jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
+
+  crypto_blake2b_final(
+    &ctx,
+    (uint8_t *)hash_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
+
+  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
+}
+
+

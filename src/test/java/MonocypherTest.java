@@ -1679,4 +1679,130 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(17)
+  public void test_crypto_blake2b_final() throws NoSuchFieldException, IllegalAccessException {
+    // blake2b final with 32 byte hash size and 8 byte message
+    {
+      Blake2b_ctx ctx = mc.new Blake2b_ctx();
+      byte[] hash = new byte[32];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_blake2b_init(ctx, hash.length);
+      mc.crypto_blake2b_update(ctx, message);
+      mc.crypto_blake2b_final(ctx, hash);
+
+      String expected = "77065d25b622a8251094d869edf6b4e9ba0708a8db1f239cb68e4eeb45851621";
+      String actual = toHex(hash);
+
+      assertEquals(expected, actual, "hash mismatch");
+
+      Field hashField = Blake2b_ctx.class.getDeclaredField("hash");
+      Field input_offsetField = Blake2b_ctx.class.getDeclaredField("input_offset");
+      Field inputField = Blake2b_ctx.class.getDeclaredField("input");
+      Field input_idxField = Blake2b_ctx.class.getDeclaredField("input_idx");
+      Field hash_sizeField = Blake2b_ctx.class.getDeclaredField("hash_size");
+
+      hashField.setAccessible(true);
+      input_offsetField.setAccessible(true);
+      inputField.setAccessible(true);
+      input_idxField.setAccessible(true);
+      hash_sizeField.setAccessible(true);
+
+      long[] hashArray = (long[]) hashField.get(ctx);
+      long[] input_offset = (long[]) input_offsetField.get(ctx);
+      long[] input = (long[]) inputField.get(ctx);
+      long input_idx = (long) input_idxField.get(ctx);
+      long hash_size = (long) hash_sizeField.get(ctx);
+
+      long[] hash_expected =
+          new long[] {
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+          };
+
+      long[] input_offset_expected =
+          new long[] {
+            fromHexLEToLong("0000000000000000"), fromHexLEToLong("0000000000000000"),
+          };
+
+      long[] input_expected =
+          new long[] {
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+            fromHexLEToLong("0000000000000000"),
+          };
+
+      long input_idx_expected = fromHexLEToLong("0000000000000000");
+      long hash_size_expected = fromHexLEToLong("0000000000000000");
+
+      assertArrayEquals(hash_expected, hashArray, "hash mismatch");
+      assertArrayEquals(input_offset_expected, input_offset, "input_offset mismatch");
+      assertArrayEquals(input_expected, input, "input mismatch");
+      assertEquals(input_idx_expected, input_idx, "input_idx mismatch");
+      assertEquals(hash_size_expected, hash_size, "hash_size mismatch");
+    }
+
+    // blake2b final with incorrect hash size
+    {
+      Blake2b_ctx ctx = mc.new Blake2b_ctx();
+      byte[] hash = new byte[32];
+      byte[] message = fromHexToByteArray("0001020304050607");
+
+      mc.crypto_blake2b_init(ctx, 2 * hash.length);
+      mc.crypto_blake2b_update(ctx, message);
+
+      try {
+        mc.crypto_blake2b_final(ctx, hash);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("hash must be of length 64 bytes", e.getMessage());
+      }
+    }
+
+    // blake2b final with null ctx
+    {
+      Blake2b_ctx ctx = null;
+      byte[] hash = new byte[32];
+
+      try {
+        mc.crypto_blake2b_final(ctx, null);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("ctx cannot be null", e.getMessage());
+      }
+    }
+
+    // blake2b final with null hash
+    {
+      Blake2b_ctx ctx = mc.new Blake2b_ctx();
+
+      try {
+        mc.crypto_blake2b_final(ctx, null);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("hash cannot be null", e.getMessage());
+      }
+    }
+  }
 }
