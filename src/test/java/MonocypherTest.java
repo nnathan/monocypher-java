@@ -2106,4 +2106,90 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(20)
+  public void test_crypto_wipe_argon2_inputs() throws NoSuchFieldException, IllegalAccessException {
+    Argon2_inputs input =
+        mc.new Argon2_inputs(fromHexToByteArray("aabbccdd"), fromHexToByteArray("aabbccdd"));
+
+    {
+      Field passField = Argon2_inputs.class.getDeclaredField("pass");
+      Field saltField = Argon2_inputs.class.getDeclaredField("salt");
+
+      passField.setAccessible(true);
+      saltField.setAccessible(true);
+
+      byte[] pass = (byte[]) passField.get(input);
+      byte[] salt = (byte[]) saltField.get(input);
+
+      byte[] pass_expected = fromHexToByteArray("aabbccdd");
+      byte[] salt_expected = fromHexToByteArray("aabbccdd");
+
+      assertArrayEquals(pass_expected, pass, "pass mismatch");
+      assertArrayEquals(salt_expected, salt, "salt mismatch");
+    }
+
+    mc.crypto_wipe(input);
+
+    {
+      Field passField = Argon2_inputs.class.getDeclaredField("pass");
+      Field saltField = Argon2_inputs.class.getDeclaredField("salt");
+
+      passField.setAccessible(true);
+      saltField.setAccessible(true);
+
+      byte[] pass = (byte[]) passField.get(input);
+      byte[] salt = (byte[]) saltField.get(input);
+
+      byte[] pass_expected = fromHexToByteArray("00000000");
+      byte[] salt_expected = fromHexToByteArray("00000000");
+
+      assertArrayEquals(pass_expected, pass, "pass mismatch");
+      assertArrayEquals(salt_expected, salt, "salt mismatch");
+    }
+  }
+
+  @Test
+  @Order(21)
+  public void test_crypto_wipe_argon2_extras() throws NoSuchFieldException, IllegalAccessException {
+    Argon2_extras extra =
+        mc.new Argon2_extras(fromHexToByteArray("aabbccdd"), fromHexToByteArray("aabbccdd"));
+
+    {
+      Field keyField = Argon2_extras.class.getDeclaredField("key");
+      Field adField = Argon2_extras.class.getDeclaredField("ad");
+
+      keyField.setAccessible(true);
+      adField.setAccessible(true);
+
+      byte[] key = (byte[]) keyField.get(extra);
+      byte[] ad = (byte[]) adField.get(extra);
+
+      byte[] key_expected = fromHexToByteArray("aabbccdd");
+      byte[] ad_expected = fromHexToByteArray("aabbccdd");
+
+      assertArrayEquals(key_expected, key, "key mismatch");
+      assertArrayEquals(ad_expected, ad, "ad mismatch");
+    }
+
+    mc.crypto_wipe(extra);
+
+    {
+      Field keyField = Argon2_extras.class.getDeclaredField("key");
+      Field adField = Argon2_extras.class.getDeclaredField("ad");
+
+      keyField.setAccessible(true);
+      adField.setAccessible(true);
+
+      byte[] key = (byte[]) keyField.get(extra);
+      byte[] ad = (byte[]) adField.get(extra);
+
+      byte[] key_expected = fromHexToByteArray("00000000");
+      byte[] ad_expected = fromHexToByteArray("00000000");
+
+      assertArrayEquals(key_expected, key, "key mismatch");
+      assertArrayEquals(ad_expected, ad, "ad mismatch");
+    }
+  }
 }

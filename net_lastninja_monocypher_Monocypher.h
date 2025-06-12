@@ -159,6 +159,22 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Ln
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1argon2
   (JNIEnv *, jobject, jbyteArray, jobject, jobject, jobject);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Argon2_inputs;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Argon2_1inputs_2
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Argon2_extras;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Argon2_1extras_2
+  (JNIEnv *, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

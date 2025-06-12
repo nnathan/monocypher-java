@@ -148,4 +148,8 @@ public class Monocypher {
 
   public native void crypto_argon2(
       byte[] hash, Argon2_config config, Argon2_inputs inputs, Argon2_extras extras);
+
+  public native void crypto_wipe(Argon2_inputs inputs);
+
+  public native void crypto_wipe(Argon2_extras extras);
 }
