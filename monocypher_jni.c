@@ -901,3 +901,20 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1final(
 
   TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Blake2b_1ctx_2(
+    JNIEnv *env,
+    jobject obj,
+    jobject blake2b_ctx) {
+  (void)obj;
+
+  if (!blake2b_ctx) {
+    return;
+  }
+
+  crypto_blake2b_ctx ctx;
+  crypto_wipe((void *)&ctx, sizeof(ctx));
+
+  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
+}

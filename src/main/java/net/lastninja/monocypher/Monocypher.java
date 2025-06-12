@@ -102,4 +102,6 @@ public class Monocypher {
   public native void crypto_blake2b_update(Blake2b_ctx ctx, byte[] message);
 
   public native void crypto_blake2b_final(Blake2b_ctx ctx, byte[] hash);
+
+  public native void crypto_wipe(Blake2b_ctx ctx);
 }
