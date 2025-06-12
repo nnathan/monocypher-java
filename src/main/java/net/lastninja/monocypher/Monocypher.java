@@ -162,4 +162,6 @@ public class Monocypher {
 
   public native void crypto_x25519_inverse(
       byte[] blind_salt, byte[] private_key, byte[] curve_point);
+
+  public native void crypto_x25519_dirty_small(byte[] pk, byte[] sk);
 }

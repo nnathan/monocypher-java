@@ -2500,4 +2500,76 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(26)
+  public void test_crypto_x25519_dirty_small() {
+    // crypto_x25519_dirty_small happy path
+    {
+      byte[] sk =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] pk = new byte[32];
+
+      mc.crypto_x25519_dirty_small(pk, sk);
+
+      String expected = "8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f";
+      String actual = toHex(pk);
+
+      assertEquals(expected, actual, "pk mismatch");
+    }
+
+    // crypto_x25519_dirty_small sad path null secret key
+    {
+      byte[] sk = null;
+      byte[] pk = new byte[32];
+
+      try {
+        mc.crypto_x25519_dirty_small(pk, sk);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("sk cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_dirty_small sad path null public key
+    {
+      byte[] sk =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] pk = null;
+
+      try {
+        mc.crypto_x25519_dirty_small(pk, sk);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("pk cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_dirty_small sk invalid length
+    {
+      byte[] sk = fromHexToByteArray("00");
+      byte[] pk = new byte[32];
+
+      try {
+        mc.crypto_x25519_dirty_small(pk, sk);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("sk must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_dirty_small pk invalid length
+    {
+      byte[] sk =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] pk = new byte[1];
+
+      try {
+        mc.crypto_x25519_dirty_small(pk, sk);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("pk must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+  }
 }

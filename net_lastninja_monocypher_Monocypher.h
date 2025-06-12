@@ -207,6 +207,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1inverse
   (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_x25519_dirty_small
+ * Signature: ([B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1small
+  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

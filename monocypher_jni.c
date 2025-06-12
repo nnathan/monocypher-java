@@ -1256,3 +1256,26 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1inverse(
   (*env)->ReleaseByteArrayElements(env, curve_point, curve_point_ptr,
                                    JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1small(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray pk,
+    jbyteArray sk) {
+  (void)obj;
+
+  CHECK_NULL(pk, );
+  CHECK_NULL(sk, );
+
+  ENSURE_ARRAY_LENGTH(pk, 32, );
+  ENSURE_ARRAY_LENGTH(sk, 32, );
+
+  jbyte *pk_ptr = (*env)->GetByteArrayElements(env, pk, NULL);
+  jbyte *sk_ptr = (*env)->GetByteArrayElements(env, sk, NULL);
+
+  crypto_x25519_dirty_small((uint8_t *)pk_ptr, (const uint8_t *)sk_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, pk, pk_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, sk, sk_ptr, JNI_ABORT);
+}
