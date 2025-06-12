@@ -104,4 +104,48 @@ public class Monocypher {
   public native void crypto_blake2b_final(Blake2b_ctx ctx, byte[] hash);
 
   public native void crypto_wipe(Blake2b_ctx ctx);
+
+  @SuppressWarnings("unused")
+  public class Argon2_config {
+    public static final int Algorithm_ARGON2_D = 0;
+    public static final int Algorithm_ARGON2_I = 1;
+    public static final int Algorithm_ARGON2_DI = 2;
+
+    private int algorithm;
+    private int nb_blocks;
+    private int nb_passes;
+    private int nb_lanes;
+
+    public Argon2_config(int algorithm, int nb_blocks, int nb_passes, int nb_lanes) {
+      this.algorithm = algorithm;
+      this.nb_blocks = nb_blocks;
+      this.nb_passes = nb_passes;
+      this.nb_lanes = nb_lanes;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public class Argon2_inputs {
+    private byte[] pass;
+    private byte[] salt;
+
+    public Argon2_inputs(byte[] pass, byte[] salt) {
+      this.pass = pass;
+      this.salt = salt;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public class Argon2_extras {
+    private byte[] key;
+    private byte[] ad;
+
+    public Argon2_extras(byte[] key, byte[] ad) {
+      this.key = key;
+      this.ad = ad;
+    }
+  }
+
+  public native void crypto_argon2(
+      byte[] hash, Argon2_config config, Argon2_inputs inputs, Argon2_extras extras);
 }
