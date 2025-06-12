@@ -2644,4 +2644,37 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(27)
+  public void test_crypto_eddsa_key_pair() {
+    // crypto_eddsa_key_pair happy path
+    {
+      byte[] secret_key = new byte[64];
+      byte[] public_key = new byte[32];
+      byte[] seed =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+
+      mc.crypto_eddsa_key_pair(secret_key, public_key, seed);
+
+      String expected, actual;
+
+      expected =
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+              + "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b";
+      actual = toHex(secret_key);
+
+      assertEquals(expected, actual, "secret_key mismatch");
+
+      expected = "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b";
+      actual = toHex(public_key);
+
+      assertEquals(expected, actual, "public_key mismatch");
+
+      expected = "0000000000000000000000000000000000000000000000000000000000000000";
+      actual = toHex(seed);
+
+      assertEquals(expected, actual, "seed mismatch");
+    }
+  }
 }

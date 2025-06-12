@@ -1302,3 +1302,32 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1fast(
   (*env)->ReleaseByteArrayElements(env, pk, pk_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, sk, sk_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1key_1pair(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray secret_key,
+    jbyteArray public_key,
+    jbyteArray seed) {
+  (void)obj;
+
+  CHECK_NULL(secret_key, );
+  CHECK_NULL(public_key, );
+  CHECK_NULL(seed, );
+
+  ENSURE_ARRAY_LENGTH(secret_key, 64, );
+  ENSURE_ARRAY_LENGTH(public_key, 32, );
+  ENSURE_ARRAY_LENGTH(seed, 32, );
+
+  jbyte *secret_key_ptr = (*env)->GetByteArrayElements(env, secret_key, NULL);
+  jbyte *public_key_ptr = (*env)->GetByteArrayElements(env, public_key, NULL);
+  jbyte *seed_ptr = (*env)->GetByteArrayElements(env, seed, NULL);
+
+  crypto_eddsa_key_pair((uint8_t *)secret_key_ptr, (uint8_t *)public_key_ptr,
+                        (uint8_t *)seed_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, public_key, public_key_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, seed, seed_ptr, 0);
+}

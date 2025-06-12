@@ -223,6 +223,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1fast
   (JNIEnv *, jobject, jbyteArray, jbyteArray);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_eddsa_key_pair
+ * Signature: ([B[B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1key_1pair
+  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

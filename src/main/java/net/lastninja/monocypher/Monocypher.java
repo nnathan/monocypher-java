@@ -166,4 +166,6 @@ public class Monocypher {
   public native void crypto_x25519_dirty_small(byte[] pk, byte[] sk);
 
   public native void crypto_x25519_dirty_fast(byte[] pk, byte[] sk);
+
+  public native void crypto_eddsa_key_pair(byte[] secret_key, byte[] public_key, byte[] seed);
 }
