@@ -1581,4 +1581,102 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(16)
+  public void test_crypto_blake2b_update() throws NoSuchFieldException, IllegalAccessException {
+    // blake2b update with 32 byte hash size and 256 byte message
+    {
+      Blake2b_ctx ctx = mc.new Blake2b_ctx();
+      byte[] message =
+          fromHexToByteArray(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  + "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+                  + "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"
+                  + "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f"
+                  + "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"
+                  + "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"
+                  + "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
+                  + "e0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
+
+      mc.crypto_blake2b_init(ctx, 32);
+      mc.crypto_blake2b_update(ctx, message);
+
+      Field hashField = Blake2b_ctx.class.getDeclaredField("hash");
+      Field input_offsetField = Blake2b_ctx.class.getDeclaredField("input_offset");
+      Field inputField = Blake2b_ctx.class.getDeclaredField("input");
+      Field input_idxField = Blake2b_ctx.class.getDeclaredField("input_idx");
+      Field hash_sizeField = Blake2b_ctx.class.getDeclaredField("hash_size");
+
+      hashField.setAccessible(true);
+      input_offsetField.setAccessible(true);
+      inputField.setAccessible(true);
+      input_idxField.setAccessible(true);
+      hash_sizeField.setAccessible(true);
+
+      long[] hash = (long[]) hashField.get(ctx);
+      long[] input_offset = (long[]) input_offsetField.get(ctx);
+      long[] input = (long[]) inputField.get(ctx);
+      long input_idx = (long) input_idxField.get(ctx);
+      long hash_size = (long) hash_sizeField.get(ctx);
+
+      long[] hash_expected =
+          new long[] {
+            fromHexLEToLong("21dccc8883c3da12"),
+            fromHexLEToLong("d1e501e4b85be497"),
+            fromHexLEToLong("eb58f03bd95088fa"),
+            fromHexLEToLong("42d699ee4c933134"),
+            fromHexLEToLong("92cbb67014beaa75"),
+            fromHexLEToLong("368c5d990c25add4"),
+            fromHexLEToLong("f775b1edbbb081a4"),
+            fromHexLEToLong("97e2e005c5348f3d"),
+          };
+
+      long[] input_offset_expected =
+          new long[] {
+            fromHexLEToLong("8000000000000000"), fromHexLEToLong("0000000000000000"),
+          };
+
+      long[] input_expected =
+          new long[] {
+            fromHexLEToLong("8081828384858687"),
+            fromHexLEToLong("88898a8b8c8d8e8f"),
+            fromHexLEToLong("9091929394959697"),
+            fromHexLEToLong("98999a9b9c9d9e9f"),
+            fromHexLEToLong("a0a1a2a3a4a5a6a7"),
+            fromHexLEToLong("a8a9aaabacadaeaf"),
+            fromHexLEToLong("b0b1b2b3b4b5b6b7"),
+            fromHexLEToLong("b8b9babbbcbdbebf"),
+            fromHexLEToLong("c0c1c2c3c4c5c6c7"),
+            fromHexLEToLong("c8c9cacbcccdcecf"),
+            fromHexLEToLong("d0d1d2d3d4d5d6d7"),
+            fromHexLEToLong("d8d9dadbdcdddedf"),
+            fromHexLEToLong("e0e1e2e3e4e5e6e7"),
+            fromHexLEToLong("e8e9eaebecedeeef"),
+            fromHexLEToLong("f0f1f2f3f4f5f6f7"),
+            fromHexLEToLong("f8f9fafbfcfdfeff"),
+          };
+
+      long input_idx_expected = fromHexLEToLong("8000000000000000");
+      long hash_size_expected = fromHexLEToLong("2000000000000000");
+
+      assertArrayEquals(hash_expected, hash, "hash mismatch");
+      assertArrayEquals(input_offset_expected, input_offset, "input_offset mismatch");
+      assertArrayEquals(input_expected, input, "input mismatch");
+      assertEquals(input_idx_expected, input_idx, "input_idx mismatch");
+      assertEquals(hash_size_expected, hash_size, "hash_size mismatch");
+    }
+
+    // blake2b update with null ctx
+    {
+      Blake2b_ctx ctx = null;
+
+      try {
+        mc.crypto_blake2b_update(ctx, null);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("ctx cannot be null", e.getMessage());
+      }
+    }
+  }
 }
