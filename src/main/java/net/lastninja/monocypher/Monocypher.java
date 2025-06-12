@@ -87,4 +87,15 @@ public class Monocypher {
   public native void crypto_blake2b(byte[] hash, byte[] message);
 
   public native void crypto_blake2b_keyed(ByteBuffer hash, ByteBuffer key, ByteBuffer message);
+
+  @SuppressWarnings("unused")
+  public class Blake2b_ctx {
+    private long hash[] = new long[8];
+    private long input_offset[] = new long[2];
+    private long input[] = new long[16];
+    private long input_idx;
+    private long hash_size;
+  }
+
+  public native void crypto_blake2b_init(Blake2b_ctx ctx, long hash_size);
 }
