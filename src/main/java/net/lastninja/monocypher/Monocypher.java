@@ -159,4 +159,7 @@ public class Monocypher {
       byte[] raw_shared_secret, byte[] your_secret_key, byte[] their_public_key);
 
   public native void crypto_x25519_to_eddsa(byte[] eddsa, byte[] x25519);
+
+  public native void crypto_x25519_inverse(
+      byte[] blind_salt, byte[] private_key, byte[] curve_point);
 }

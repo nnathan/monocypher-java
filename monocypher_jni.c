@@ -1224,3 +1224,35 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1to_1eddsa(
   (*env)->ReleaseByteArrayElements(env, eddsa, eddsa_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, x25519, x25519_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1inverse(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray blind_salt,
+    jbyteArray private_key,
+    jbyteArray curve_point) {
+  (void)obj;
+
+  CHECK_NULL(blind_salt, );
+  CHECK_NULL(private_key, );
+  CHECK_NULL(curve_point, );
+
+  ENSURE_ARRAY_LENGTH(blind_salt, 32, );
+  ENSURE_ARRAY_LENGTH(private_key, 32, );
+  ENSURE_ARRAY_LENGTH(curve_point, 32, );
+
+  jbyte *blind_salt_ptr = (*env)->GetByteArrayElements(env, blind_salt, NULL);
+  jbyte *private_key_ptr = (*env)->GetByteArrayElements(env, private_key, NULL);
+  jbyte *curve_point_ptr = (*env)->GetByteArrayElements(env, curve_point, NULL);
+
+  crypto_x25519_inverse((uint8_t *)blind_salt_ptr,
+                        (const uint8_t *)private_key_ptr,
+                        (const uint8_t *)curve_point_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, blind_salt, blind_salt_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, private_key, private_key_ptr,
+                                   JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, curve_point, curve_point_ptr,
+                                   JNI_ABORT);
+}

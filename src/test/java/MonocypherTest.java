@@ -2448,4 +2448,56 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(25)
+  public void test_crypto_x25519_inverse() {
+    // crypto_x25519_inverse happy path
+    {
+      byte[] curve_point =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] private_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] blind_salt = new byte[32];
+
+      mc.crypto_x25519_inverse(blind_salt, private_key, curve_point);
+
+      String expected = "8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f";
+      String actual = toHex(blind_salt);
+
+      assertEquals(expected, actual, "blind_salt mismatch");
+    }
+
+    // crypto_x25519_inverse sad path null blind_salt
+    {
+      byte[] curve_point =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] private_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] blind_salt = null;
+
+      try {
+        mc.crypto_x25519_inverse(blind_salt, private_key, curve_point);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("blind_salt cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_inverse sad path blind_salt invalid length
+    {
+      byte[] curve_point =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] private_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] blind_salt = new byte[1];
+
+      try {
+        mc.crypto_x25519_inverse(blind_salt, private_key, curve_point);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("blind_salt must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+  }
 }
