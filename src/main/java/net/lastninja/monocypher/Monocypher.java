@@ -164,4 +164,6 @@ public class Monocypher {
       byte[] blind_salt, byte[] private_key, byte[] curve_point);
 
   public native void crypto_x25519_dirty_small(byte[] pk, byte[] sk);
+
+  public native void crypto_x25519_dirty_fast(byte[] pk, byte[] sk);
 }
