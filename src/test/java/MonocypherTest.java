@@ -2264,4 +2264,116 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(23)
+  public void test_crypto_x25519() {
+    // crypto_x25519 happy path
+    {
+      byte[] your_secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] their_public_key =
+          fromHexToByteArray("8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f");
+      byte[] raw_shared_secret = new byte[32];
+
+      mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+
+      String expected = "df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64";
+      String actual = toHex(raw_shared_secret);
+
+      assertEquals(expected, actual, "raw_shared_secret mismatch");
+    }
+
+    // crypto_x25519 sad path null secret key
+    {
+      byte[] your_secret_key = null;
+      byte[] their_public_key =
+          fromHexToByteArray("8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f");
+      byte[] raw_shared_secret = new byte[32];
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("your_secret_key cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519 sad path null public key
+    {
+      byte[] your_secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] their_public_key = null;
+      byte[] raw_shared_secret = new byte[32];
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("their_public_key cannot be null", e.getMessage());
+      }
+    }
+    //
+    // crypto_x25519 sad path raw shared secret
+    {
+      byte[] your_secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] their_public_key =
+          fromHexToByteArray("8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f");
+      byte[] raw_shared_secret = null;
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("raw_shared_secret cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519 secret_key invalid length
+    {
+      byte[] your_secret_key = fromHexToByteArray("00");
+      byte[] their_public_key =
+          fromHexToByteArray("8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f");
+      byte[] raw_shared_secret = new byte[32];
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("your_secret_key must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+
+    // crypto_x25519 public_key invalid length
+    {
+      byte[] your_secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] their_public_key = fromHexToByteArray("8f");
+      byte[] raw_shared_secret = new byte[32];
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("their_public_key must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+
+    // crypto_x25519 public_key invalid length
+    {
+      byte[] your_secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] their_public_key =
+          fromHexToByteArray("8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f");
+      byte[] raw_shared_secret = new byte[1];
+
+      try {
+        mc.crypto_x25519(raw_shared_secret, your_secret_key, their_public_key);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("raw_shared_secret must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+  }
 }

@@ -154,4 +154,7 @@ public class Monocypher {
   public native void crypto_wipe(Argon2_extras extras);
 
   public native void crypto_x25519_public_key(byte[] public_key, byte[] secret_key);
+
+  public native void crypto_x25519(
+      byte[] raw_shared_secret, byte[] your_secret_key, byte[] their_public_key);
 }

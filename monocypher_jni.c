@@ -1166,3 +1166,38 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1public_1key(
   (*env)->ReleaseByteArrayElements(env, public_key, public_key_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray raw_shared_secret,
+    jbyteArray your_secret_key,
+    jbyteArray their_public_key) {
+  (void)obj;
+
+  CHECK_NULL(raw_shared_secret, );
+  CHECK_NULL(your_secret_key, );
+  CHECK_NULL(their_public_key, );
+
+  ENSURE_ARRAY_LENGTH(raw_shared_secret, 32, );
+  ENSURE_ARRAY_LENGTH(your_secret_key, 32, );
+  ENSURE_ARRAY_LENGTH(their_public_key, 32, );
+
+  jbyte *raw_shared_secret_ptr =
+      (*env)->GetByteArrayElements(env, raw_shared_secret, NULL);
+  jbyte *your_secret_key_ptr =
+      (*env)->GetByteArrayElements(env, your_secret_key, NULL);
+  jbyte *their_public_key_ptr =
+      (*env)->GetByteArrayElements(env, their_public_key, NULL);
+
+  crypto_x25519((uint8_t *)raw_shared_secret_ptr,
+                (const uint8_t *)your_secret_key_ptr,
+                (const uint8_t *)their_public_key_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, raw_shared_secret,
+                                   raw_shared_secret_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, your_secret_key, your_secret_key_ptr,
+                                   JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, their_public_key, their_public_key_ptr,
+                                   JNI_ABORT);
+}
