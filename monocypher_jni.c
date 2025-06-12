@@ -1142,3 +1142,27 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher
     (*env)->ReleaseByteArrayElements(env, ad, ad_ptr, 0);
   }
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1public_1key(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray public_key,
+    jbyteArray secret_key) {
+  (void)obj;
+
+  CHECK_NULL(public_key, );
+  CHECK_NULL(secret_key, );
+
+  ENSURE_ARRAY_LENGTH(public_key, 32, );
+  ENSURE_ARRAY_LENGTH(secret_key, 32, );
+
+  jbyte *public_key_ptr = (*env)->GetByteArrayElements(env, public_key, NULL);
+  jbyte *secret_key_ptr = (*env)->GetByteArrayElements(env, secret_key, NULL);
+
+  crypto_x25519_public_key((uint8_t *)public_key_ptr,
+                           (const uint8_t *)secret_key_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, public_key, public_key_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, JNI_ABORT);
+}

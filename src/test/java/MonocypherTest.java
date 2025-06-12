@@ -2192,4 +2192,76 @@ public class MonocypherTest {
       assertArrayEquals(ad_expected, ad, "ad mismatch");
     }
   }
+
+  @Test
+  @Order(22)
+  public void test_crypto_x25519_public_key() {
+    // crypto_x25519_public_key happy path
+    {
+      byte[] secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] public_key = new byte[32];
+
+      mc.crypto_x25519_public_key(public_key, secret_key);
+
+      String expected = "8f40c5adb68f25624ae5b214ea767a6ec94d829d3d7b5e1ad1ba6f3e2138285f";
+      String actual = toHex(public_key);
+
+      assertEquals(expected, actual, "public_key mismatch");
+    }
+
+    // crypto_x25519_public_key sad path null secret key
+    {
+      byte[] secret_key = null;
+      byte[] public_key = new byte[32];
+
+      try {
+        mc.crypto_x25519_public_key(public_key, secret_key);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("secret_key cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_public_key sad path null public key
+    {
+      byte[] secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] public_key = null;
+
+      try {
+        mc.crypto_x25519_public_key(public_key, secret_key);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("public_key cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_public_key secret_key invalid length
+    {
+      byte[] secret_key = fromHexToByteArray("00");
+      byte[] public_key = new byte[32];
+
+      try {
+        mc.crypto_x25519_public_key(public_key, secret_key);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("secret_key must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_public_key public_key invalid length
+    {
+      byte[] secret_key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] public_key = new byte[1];
+
+      try {
+        mc.crypto_x25519_public_key(public_key, secret_key);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("public_key must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+  }
 }
