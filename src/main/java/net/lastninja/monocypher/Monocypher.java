@@ -157,4 +157,6 @@ public class Monocypher {
 
   public native void crypto_x25519(
       byte[] raw_shared_secret, byte[] your_secret_key, byte[] their_public_key);
+
+  public native void crypto_x25519_to_eddsa(byte[] eddsa, byte[] x25519);
 }

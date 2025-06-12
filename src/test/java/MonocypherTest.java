@@ -2376,4 +2376,76 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(24)
+  public void test_crypto_x25519_to_eddsa() {
+    // crypto_x25519_to_eddsa happy path
+    {
+      byte[] x25519 =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] eddsa = new byte[32];
+
+      mc.crypto_x25519_to_eddsa(eddsa, x25519);
+
+      String expected = "752f61d0e2d2e7577f2aafa6a92298b86bb32521d6d7f109dcd834fc41f2a72a";
+      String actual = toHex(eddsa);
+
+      assertEquals(expected, actual, "raw_shared_secret mismatch");
+    }
+
+    // crypto_x25519_to_eddsa sad path null x25519
+    {
+      byte[] x25519 = null;
+      byte[] eddsa = new byte[32];
+
+      try {
+        mc.crypto_x25519_to_eddsa(eddsa, x25519);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("x25519 cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_to_eddsa sad path null eddsa
+    {
+      byte[] x25519 =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] eddsa = null;
+
+      try {
+        mc.crypto_x25519_to_eddsa(eddsa, x25519);
+        fail("Expected NullPointerException was not thrown");
+      } catch (NullPointerException e) {
+        assertEquals("eddsa cannot be null", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_to_eddsa sad path small x25519
+    {
+      byte[] x25519 = fromHexToByteArray("df");
+      byte[] eddsa = new byte[32];
+
+      try {
+        mc.crypto_x25519_to_eddsa(eddsa, x25519);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("x25519 must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+
+    // crypto_x25519_to_eddsa sad path small eddsa
+    {
+      byte[] x25519 =
+          fromHexToByteArray("df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64");
+      byte[] eddsa = new byte[1];
+
+      try {
+        mc.crypto_x25519_to_eddsa(eddsa, x25519);
+        fail("Expected IllegalArgumentException was not thrown");
+      } catch (IllegalArgumentException e) {
+        assertEquals("eddsa must be an array of length 32 bytes", e.getMessage());
+      }
+    }
+  }
 }
