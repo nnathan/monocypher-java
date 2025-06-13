@@ -255,6 +255,14 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1c
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1to_1x25519
   (JNIEnv *, jobject, jbyteArray, jbyteArray);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_eddsa_trim_scalar
+ * Signature: ([B[B)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1trim_1scalar
+  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

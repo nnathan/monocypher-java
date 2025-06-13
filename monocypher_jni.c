@@ -1429,3 +1429,26 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1to_1x25519(
   (*env)->ReleaseByteArrayElements(env, x25519, x25519_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, eddsa, eddsa_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1trim_1scalar(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray out,
+    jbyteArray in) {
+  (void)obj;
+
+  CHECK_NULL(out, );
+  CHECK_NULL(in, );
+
+  ENSURE_ARRAY_LENGTH(out, 32, );
+  ENSURE_ARRAY_LENGTH(in, 32, );
+
+  jbyte *out_ptr = (*env)->GetByteArrayElements(env, out, NULL);
+  jbyte *in_ptr = (*env)->GetByteArrayElements(env, in, NULL);
+
+  crypto_eddsa_trim_scalar((uint8_t *)out_ptr, (const uint8_t *)in_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, out, out_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, in, in_ptr, JNI_ABORT);
+}

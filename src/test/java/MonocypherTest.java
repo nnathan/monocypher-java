@@ -2799,4 +2799,22 @@ public class MonocypherTest {
       assertEquals(expected, actual, "x25519 mismatch");
     }
   }
+
+  @Test
+  @Order(30)
+  public void test_crypto_trim_scalar() {
+    // crypto_trim_scalar happy path
+    {
+      byte[] in =
+          fromHexToByteArray("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+      byte[] out = new byte[32];
+
+      mc.crypto_eddsa_trim_scalar(out, in);
+
+      String expected = "f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f";
+      String actual = toHex(out);
+
+      assertEquals(expected, actual, "out mismatch");
+    }
+  }
 }

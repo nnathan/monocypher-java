@@ -174,4 +174,6 @@ public class Monocypher {
   public native int crypto_eddsa_check(byte[] signature, byte[] public_key, byte[] message);
 
   public native void crypto_eddsa_to_x25519(byte[] x25519, byte[] eddsa);
+
+  public native void crypto_eddsa_trim_scalar(byte[] out, byte[] in);
 }
