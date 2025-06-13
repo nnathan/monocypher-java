@@ -2817,4 +2817,25 @@ public class MonocypherTest {
       assertEquals(expected, actual, "out mismatch");
     }
   }
+
+  @Test
+  @Order(31)
+  public void test_crypto_eddsa_reduce() {
+    // crypto_eddsa_reduce happy path
+    {
+      byte[] expanded =
+          fromHexToByteArray(
+              "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                  + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+      byte[] reduced = new byte[32];
+      ;
+
+      mc.crypto_eddsa_reduce(reduced, expanded);
+
+      String expected = "000f9c44e31106a447938568a71b0ed065bef517d273ecce3d9a307c1b419903";
+      String actual = toHex(reduced);
+
+      assertEquals(expected, actual, "reduced mismatch");
+    }
+  }
 }
