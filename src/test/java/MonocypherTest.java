@@ -2781,4 +2781,22 @@ public class MonocypherTest {
       assertEquals(expected, result, "signature verification should fail");
     }
   }
+
+  @Test
+  @Order(30)
+  public void test_crypto_eddsa_to_x25519() {
+    // crypto_eddsa_to_x25519 happy path
+    {
+      byte[] eddsa =
+          fromHexToByteArray("752f61d0e2d2e7577f2aafa6a92298b86bb32521d6d7f109dcd834fc41f2a72a");
+      byte[] x25519 = new byte[32];
+
+      mc.crypto_eddsa_to_x25519(x25519, eddsa);
+
+      String expected = "df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64";
+      String actual = toHex(x25519);
+
+      assertEquals(expected, actual, "x25519 mismatch");
+    }
+  }
 }

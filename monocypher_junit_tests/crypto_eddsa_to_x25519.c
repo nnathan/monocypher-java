@@ -1,0 +1,55 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "monocypher.h"
+
+int is_big_endian(void) {
+  uint16_t x = 0x0102;
+  return *((uint8_t *)&x) == 0x01;
+}
+
+void to_hex_string(const uint8_t *data, size_t len, char *hex_buf) {
+  for (size_t i = 0; i < len; i++) {
+    sprintf(&hex_buf[i * 2], "%02x", (unsigned int)data[i]);
+  }
+  hex_buf[len * 2] = '\0';  // Null-terminate
+}
+
+void to_le64_hex(uint64_t v, char out[17]) {
+  to_hex_string((const uint8_t *)&v, sizeof(v), out);
+}
+
+int main(int argc, char **argv) {
+  {
+    uint8_t eddsa[32];
+    uint8_t x25519[32];
+    uint8_t your_secret[32];
+    uint8_t their_secret[32];
+    uint8_t their_public[32];
+
+    for (int i = 0; i < sizeof(your_secret); i++) {
+      your_secret[i] = i;
+    };
+
+    for (int i = sizeof(their_secret) - 1; i >= 0; i--) {
+      their_secret[i] = i;
+    };
+
+    crypto_x25519_public_key(their_public, their_secret);
+
+    crypto_x25519(x25519, your_secret, their_public);
+
+    crypto_x25519_to_eddsa(eddsa, x25519);
+    crypto_eddsa_to_x25519(x25519, eddsa);
+
+    char eddsa_hex_buf[64 + 1] = {0};
+    char x25519_hex_buf[64 + 1] = {0};
+    to_hex_string(eddsa, 32, eddsa_hex_buf);
+    to_hex_string(x25519, 32, x25519_hex_buf);
+
+    printf("eddsa: %s\n", eddsa_hex_buf);
+    printf("x25519: %s\n", x25519_hex_buf);
+  }
+
+  return 0;
+}

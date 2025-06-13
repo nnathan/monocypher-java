@@ -1406,3 +1406,26 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1check(
 
   return (jint)result;
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1to_1x25519(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray x25519,
+    jbyteArray eddsa) {
+  (void)obj;
+
+  CHECK_NULL(x25519, );
+  CHECK_NULL(eddsa, );
+
+  ENSURE_ARRAY_LENGTH(x25519, 32, );
+  ENSURE_ARRAY_LENGTH(eddsa, 32, );
+
+  jbyte *x25519_ptr = (*env)->GetByteArrayElements(env, x25519, NULL);
+  jbyte *eddsa_ptr = (*env)->GetByteArrayElements(env, eddsa, NULL);
+
+  crypto_eddsa_to_x25519((uint8_t *)x25519_ptr, (const uint8_t *)eddsa_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, x25519, x25519_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, eddsa, eddsa_ptr, JNI_ABORT);
+}
