@@ -1940,3 +1940,30 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1update(
     (*env)->ReleaseByteArrayElements(env, message, message_ptr, JNI_ABORT);
   }
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1final(
+    JNIEnv *env,
+    jobject obj,
+    jobject poly1305_ctx,
+    jbyteArray mac) {
+  (void)obj;
+
+  CHECK_NULL_WITH_NAME(poly1305_ctx, "ctx", );
+  CHECK_NULL(mac, );
+
+  ENSURE_ARRAY_LENGTH(mac, 16, );
+
+  crypto_poly1305_ctx ctx;
+  FROM_POLY1305_CTX_CLASS(poly1305_ctx, ctx);
+
+  jbyte *mac_ptr = (*env)->GetByteArrayElements(env, mac, NULL);
+
+  crypto_poly1305_final(&ctx, (uint8_t *)mac_ptr);
+
+  TO_POLY1305_CTX_CLASS(ctx, poly1305_ctx);
+
+  crypto_wipe((void *)&ctx, sizeof(ctx));
+
+  (*env)->ReleaseByteArrayElements(env, mac, mac_ptr, 0);
+}
