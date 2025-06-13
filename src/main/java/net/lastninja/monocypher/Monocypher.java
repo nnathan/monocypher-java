@@ -182,4 +182,6 @@ public class Monocypher {
   public native void crypto_eddsa_mul_add(byte r[], byte[] a, byte[] b, byte[] c);
 
   public native void crypto_eddsa_scalarbase(byte[] point, byte[] scalar);
+
+  public native void crypto_chacha20_h(byte[] out, byte[] key, byte[] in);
 }

@@ -1531,3 +1531,31 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1scalarbase(
   (*env)->ReleaseByteArrayElements(env, point, point_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, scalar, scalar_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1h(JNIEnv *env,
+                                                             jobject obj,
+                                                             jbyteArray out,
+                                                             jbyteArray key,
+                                                             jbyteArray in) {
+  (void)obj;
+
+  CHECK_NULL(out, );
+  CHECK_NULL(key, );
+  CHECK_NULL(in, );
+
+  ENSURE_ARRAY_LENGTH(out, 32, );
+  ENSURE_ARRAY_LENGTH(key, 32, );
+  ENSURE_ARRAY_LENGTH(in, 16, );
+
+  jbyte *out_ptr = (*env)->GetByteArrayElements(env, out, NULL);
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+  jbyte *in_ptr = (*env)->GetByteArrayElements(env, in, NULL);
+
+  crypto_chacha20_h((uint8_t *)out_ptr, (const uint8_t *)key_ptr,
+                    (const uint8_t *)in_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, out, out_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, in, in_ptr, JNI_ABORT);
+}

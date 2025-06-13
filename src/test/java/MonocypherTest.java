@@ -2878,4 +2878,23 @@ public class MonocypherTest {
       assertEquals(expected, actual, "point mismatch");
     }
   }
+
+  @Test
+  @Order(34)
+  public void test_crypto_chacha20_h() {
+    // crypto_chacha20_h happy path
+    {
+      byte[] in = fromHexToByteArray("000102030405060708090a0b0c0d0e0f");
+      byte[] key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] out = new byte[32];
+
+      mc.crypto_chacha20_h(out, key, in);
+
+      String expected = "51e3ff45a895675c4b33b46c64f4a9ace110d34df6a2ceab486372bacbd3eff6";
+      String actual = toHex(out);
+
+      assertEquals(expected, actual, "out mismatch");
+    }
+  }
 }
