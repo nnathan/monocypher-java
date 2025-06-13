@@ -3247,4 +3247,40 @@ public class MonocypherTest {
       assertEquals(expected_ctr, ctr, "ctr mismatch");
     }
   }
+
+  @Test
+  @Order(39)
+  public void test_crypto_poly1305() {
+    // crypto_poly1305 (inplace)happy path
+    {
+      ByteBuffer message = fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f");
+      ByteBuffer mac = message.duplicate();
+      byte[] key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+
+      mc.crypto_poly1305(mac, message, key);
+
+      String expected = "a2291a363def0b53845fa4126a6ad364";
+
+      String actual = toHex(mac);
+
+      assertEquals(expected, actual, "mac mismatch");
+    }
+
+    // crypto_poly1305 (null message) happy path
+    {
+      ByteBuffer message = null;
+      ByteBuffer mac = ByteBuffer.allocateDirect(16);
+      byte[] key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+
+      mc.crypto_poly1305(mac, message, key);
+
+      String expected = "101112131415161718191a1b1c1d1e1f";
+
+      String actual = toHex(mac);
+
+      assertEquals(expected, actual, "mac mismatch");
+    }
+  }
 }

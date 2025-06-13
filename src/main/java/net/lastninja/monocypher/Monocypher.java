@@ -208,4 +208,6 @@ public class Monocypher {
       ByteBuffer key,
       ByteBuffer nonce,
       long ctr);
+
+  public native void crypto_poly1305(ByteBuffer mac, ByteBuffer message, byte[] key);
 }

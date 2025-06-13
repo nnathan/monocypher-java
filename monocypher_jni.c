@@ -1769,3 +1769,36 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1x(
 
   return result;
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305(JNIEnv *env,
+                                                          jobject obj,
+                                                          jobject mac,
+                                                          jobject message,
+                                                          jbyteArray key) {
+  (void)obj;
+
+  CHECK_NULL(mac, );
+  CHECK_NULL(key, );
+
+  ENSURE_ARRAY_LENGTH(key, 32, );
+
+  INIT_BYTE_BUFFER_CLASS(bbClass);
+
+  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, mac, );
+  if (message) {
+    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, message, );
+  }
+
+  jbyte *mac_ptr = (*env)->GetDirectBufferAddress(env, mac);
+  jbyte *message_ptr =
+      message ? (*env)->GetDirectBufferAddress(env, message) : NULL;
+  jint message_len =
+      message ? (*env)->CallIntMethod(env, message, bbClass_remaining) : 0;
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+
+  crypto_poly1305((uint8_t *)mac_ptr, (const uint8_t *)message_ptr,
+                  (size_t)message_len, (const uint8_t *)key_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+}
