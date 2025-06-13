@@ -3369,4 +3369,204 @@ public class MonocypherTest {
       assertArrayEquals(h_expected, h, "h mismatch");
     }
   }
+
+  @Test
+  @Order(41)
+  public void test_crypto_poly1305_update() throws NoSuchFieldException, IllegalAccessException {
+    // poly1305 update
+    {
+      Poly1305_ctx ctx = mc.new Poly1305_ctx();
+      byte[] key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] message =
+          fromHexToByteArray(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122");
+
+      mc.crypto_poly1305_init(ctx, key);
+
+      mc.crypto_poly1305_update(ctx, message);
+
+      {
+        // c is not deterministic
+        // Field cField = Poly1305_ctx.class.getDeclaredField("c");
+        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
+        Field rField = Poly1305_ctx.class.getDeclaredField("r");
+        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
+        Field hField = Poly1305_ctx.class.getDeclaredField("h");
+
+        // c is not deterministic
+        // cField.setAccessible(true);
+        c_idxField.setAccessible(true);
+        rField.setAccessible(true);
+        padField.setAccessible(true);
+        hField.setAccessible(true);
+
+        // c is not deterministic
+        // byte[] c = (byte[]) cField.get(ctx);
+        long c_idx = (long) c_idxField.get(ctx);
+        int[] r = (int[]) rField.get(ctx);
+        int[] pad = (int[]) padField.get(ctx);
+        int[] h = (int[]) hField.get(ctx);
+
+        // c is not deterministic
+        // byte[] c_expected = fromHexToByteArray("2021224200000000445c7a9b01000000");
+
+        long c_idx_expected = fromHexLEToLong("0300000000000000");
+
+        int[] r_expected =
+            new int[] {
+              fromHexLEToInt("00010203"),
+              fromHexLEToInt("04050607"),
+              fromHexLEToInt("08090a0b"),
+              fromHexLEToInt("0c0d0e0f"),
+            };
+
+        int[] pad_expected =
+            new int[] {
+              fromHexLEToInt("10111213"),
+              fromHexLEToInt("14151617"),
+              fromHexLEToInt("18191a1b"),
+              fromHexLEToInt("1c1d1e1f"),
+            };
+
+        int[] h_expected =
+            new int[] {
+              fromHexLEToInt("d492fbae"),
+              fromHexLEToInt("86a68c21"),
+              fromHexLEToInt("c86d9a80"),
+              fromHexLEToInt("0df9d521"),
+              fromHexLEToInt("01000000"),
+            };
+
+        // c is not deterministic
+        // assertArrayEquals(c_expected, c, "c mismatch");
+        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
+        assertArrayEquals(r_expected, r, "r mismatch");
+        assertArrayEquals(pad_expected, pad, "pad mismatch");
+        assertArrayEquals(h_expected, h, "h mismatch");
+      }
+
+      mc.crypto_poly1305_update(ctx, null);
+
+      {
+        Field cField = Poly1305_ctx.class.getDeclaredField("c");
+        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
+        Field rField = Poly1305_ctx.class.getDeclaredField("r");
+        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
+        Field hField = Poly1305_ctx.class.getDeclaredField("h");
+
+        // c is not deterministic
+        // cField.setAccessible(true);
+        c_idxField.setAccessible(true);
+        rField.setAccessible(true);
+        padField.setAccessible(true);
+        hField.setAccessible(true);
+
+        // c is not deterministic
+        // byte[] c = (byte[]) cField.get(ctx);
+        long c_idx = (long) c_idxField.get(ctx);
+        int[] r = (int[]) rField.get(ctx);
+        int[] pad = (int[]) padField.get(ctx);
+        int[] h = (int[]) hField.get(ctx);
+
+        // c is not deterministic
+        // byte[] c_expected = fromHexToByteArray("2021224200000000445c7a9b01000000");
+
+        long c_idx_expected = fromHexLEToLong("0300000000000000");
+
+        int[] r_expected =
+            new int[] {
+              fromHexLEToInt("00010203"),
+              fromHexLEToInt("04050607"),
+              fromHexLEToInt("08090a0b"),
+              fromHexLEToInt("0c0d0e0f"),
+            };
+
+        int[] pad_expected =
+            new int[] {
+              fromHexLEToInt("10111213"),
+              fromHexLEToInt("14151617"),
+              fromHexLEToInt("18191a1b"),
+              fromHexLEToInt("1c1d1e1f"),
+            };
+
+        int[] h_expected =
+            new int[] {
+              fromHexLEToInt("d492fbae"),
+              fromHexLEToInt("86a68c21"),
+              fromHexLEToInt("c86d9a80"),
+              fromHexLEToInt("0df9d521"),
+              fromHexLEToInt("01000000"),
+            };
+
+        // c is not deterministic
+        // assertArrayEquals(c_expected, c, "c mismatch");
+        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
+        assertArrayEquals(r_expected, r, "r mismatch");
+        assertArrayEquals(pad_expected, pad, "pad mismatch");
+        assertArrayEquals(h_expected, h, "h mismatch");
+      }
+
+      mc.crypto_poly1305_update(ctx, message);
+
+      {
+        // c is not deterministic
+        // Field cField = Poly1305_ctx.class.getDeclaredField("c");
+        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
+        Field rField = Poly1305_ctx.class.getDeclaredField("r");
+        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
+        Field hField = Poly1305_ctx.class.getDeclaredField("h");
+
+        // c is not deterministic
+        // cField.setAccessible(true);
+        c_idxField.setAccessible(true);
+        rField.setAccessible(true);
+        padField.setAccessible(true);
+        hField.setAccessible(true);
+
+        // c is not deterministic
+        // byte[] c = (byte[]) cField.get(ctx);
+        long c_idx = (long) c_idxField.get(ctx);
+        int[] r = (int[]) rField.get(ctx);
+        int[] pad = (int[]) padField.get(ctx);
+        int[] h = (int[]) hField.get(ctx);
+
+        byte[] c_expected = fromHexToByteArray("1d1e1f202122030405060708090a0b0c");
+
+        long c_idx_expected = fromHexLEToLong("0600000000000000");
+
+        int[] r_expected =
+            new int[] {
+              fromHexLEToInt("00010203"),
+              fromHexLEToInt("04050607"),
+              fromHexLEToInt("08090a0b"),
+              fromHexLEToInt("0c0d0e0f"),
+            };
+
+        int[] pad_expected =
+            new int[] {
+              fromHexLEToInt("10111213"),
+              fromHexLEToInt("14151617"),
+              fromHexLEToInt("18191a1b"),
+              fromHexLEToInt("1c1d1e1f"),
+            };
+
+        int[] h_expected =
+            new int[] {
+              fromHexLEToInt("e2f47dfb"),
+              fromHexLEToInt("b8e142c1"),
+              fromHexLEToInt("16e78301"),
+              fromHexLEToInt("881743b2"),
+              fromHexLEToInt("00000000"),
+            };
+
+        // c is not deterministic
+        // assertArrayEquals(c_expected, c, "c mismatch");
+        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
+        assertArrayEquals(r_expected, r, "r mismatch");
+        assertArrayEquals(pad_expected, pad, "pad mismatch");
+        assertArrayEquals(h_expected, h, "h mismatch");
+      }
+    }
+  }
 }

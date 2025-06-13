@@ -220,4 +220,6 @@ public class Monocypher {
   }
 
   public native void crypto_poly1305_init(Poly1305_ctx ctx, byte[] key);
+
+  public native void crypto_poly1305_update(Poly1305_ctx ctx, byte[] message);
 }
