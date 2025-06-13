@@ -1475,3 +1475,36 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1reduce(
   (*env)->ReleaseByteArrayElements(env, reduced, reduced_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, expanded, expanded_ptr, JNI_ABORT);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1mul_1add(JNIEnv *env,
+                                                                 jobject obj,
+                                                                 jbyteArray r,
+                                                                 jbyteArray a,
+                                                                 jbyteArray b,
+                                                                 jbyteArray c) {
+  (void)obj;
+
+  CHECK_NULL(r, );
+  CHECK_NULL(a, );
+  CHECK_NULL(b, );
+  CHECK_NULL(c, );
+
+  ENSURE_ARRAY_LENGTH(r, 32, );
+  ENSURE_ARRAY_LENGTH(a, 32, );
+  ENSURE_ARRAY_LENGTH(b, 32, );
+  ENSURE_ARRAY_LENGTH(c, 32, );
+
+  jbyte *r_ptr = (*env)->GetByteArrayElements(env, r, NULL);
+  jbyte *a_ptr = (*env)->GetByteArrayElements(env, a, NULL);
+  jbyte *b_ptr = (*env)->GetByteArrayElements(env, b, NULL);
+  jbyte *c_ptr = (*env)->GetByteArrayElements(env, c, NULL);
+
+  crypto_eddsa_mul_add((uint8_t *)r_ptr, (const uint8_t *)a_ptr,
+                       (const uint8_t *)b_ptr, (const uint8_t *)c_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, r, r_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, a, a_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, b, b_ptr, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements(env, c, c_ptr, JNI_ABORT);
+}

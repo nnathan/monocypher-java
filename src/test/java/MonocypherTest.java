@@ -2838,4 +2838,26 @@ public class MonocypherTest {
       assertEquals(expected, actual, "reduced mismatch");
     }
   }
+
+  @Test
+  @Order(32)
+  public void test_crypto_eddsa_mul_add() {
+    // crypto_eddsa_mul_add happy path
+    {
+      byte[] a =
+          fromHexToByteArray("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      byte[] b =
+          fromHexToByteArray("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+      byte[] c =
+          fromHexToByteArray("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
+      byte[] r = new byte[32];
+
+      mc.crypto_eddsa_mul_add(r, a, b, c);
+
+      String expected = "2a05f60b2d496b1b6c6223f3c345190ee88483d888cca6371eacab86796f7802";
+      String actual = toHex(r);
+
+      assertEquals(expected, actual, "r mismatch");
+    }
+  }
 }
