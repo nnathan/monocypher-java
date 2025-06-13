@@ -210,4 +210,14 @@ public class Monocypher {
       long ctr);
 
   public native void crypto_poly1305(ByteBuffer mac, ByteBuffer message, byte[] key);
+
+  public class Poly1305_ctx {
+    byte[] c = new byte[16];
+    long c_idx;
+    int[] r = new int[4];
+    int[] pad = new int[4];
+    int[] h = new int[5];
+  }
+
+  public native void crypto_poly1305_init(Poly1305_ctx ctx, byte[] key);
 }

@@ -1802,3 +1802,59 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305(JNIEnv *env,
 
   (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
 }
+
+#define TO_POLY1305_CTX_CLASS(c_ctx, java_ctx)                                 \
+  do {                                                                         \
+    jclass ctxClass = (*env)->GetObjectClass(env, java_ctx);                   \
+    {                                                                          \
+      jfieldID fidC = (*env)->GetFieldID(env, ctxClass, "c", "[B");            \
+      jbyteArray cArray =                                                      \
+          (jbyteArray)(*env)->GetObjectField(env, java_ctx, fidC);             \
+      (*env)->SetByteArrayRegion(env, cArray, 0, 16, (const jbyte *)c_ctx.c);  \
+    }                                                                          \
+    {                                                                          \
+      jfieldID fidCIdx = (*env)->GetFieldID(env, ctxClass, "c_idx", "J");      \
+      (*env)->SetLongField(env, java_ctx, fidCIdx, (jlong)c_ctx.c_idx);        \
+    }                                                                          \
+    {                                                                          \
+      jfieldID fidR = (*env)->GetFieldID(env, ctxClass, "r", "[I");            \
+      jintArray rArray =                                                       \
+          (jintArray)(*env)->GetObjectField(env, java_ctx, fidR);              \
+      (*env)->SetIntArrayRegion(env, rArray, 0, 4, (const jint *)c_ctx.r);     \
+    }                                                                          \
+    {                                                                          \
+      jfieldID fidPad = (*env)->GetFieldID(env, ctxClass, "pad", "[I");        \
+      jintArray padArray =                                                     \
+          (jintArray)(*env)->GetObjectField(env, java_ctx, fidPad);            \
+      (*env)->SetIntArrayRegion(env, padArray, 0, 4, (const jint *)c_ctx.pad); \
+    }                                                                          \
+    {                                                                          \
+      jfieldID fidH = (*env)->GetFieldID(env, ctxClass, "h", "[I");            \
+      jintArray hArray =                                                       \
+          (jintArray)(*env)->GetObjectField(env, java_ctx, fidH);              \
+      (*env)->SetIntArrayRegion(env, hArray, 0, 5, (const jint *)c_ctx.h);     \
+    }                                                                          \
+  } while (0)
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1init(
+    JNIEnv *env,
+    jobject obj,
+    jobject poly1305_ctx,
+    jbyteArray key) {
+  (void)obj;
+
+  CHECK_NULL_WITH_NAME(poly1305_ctx, "ctx", );
+  CHECK_NULL(key, );
+
+  ENSURE_ARRAY_LENGTH(key, 32, );
+
+  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
+
+  crypto_poly1305_ctx ctx;
+  crypto_poly1305_init(&ctx, (const uint8_t *)key_ptr);
+
+  TO_POLY1305_CTX_CLASS(ctx, poly1305_ctx);
+
+  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
+}

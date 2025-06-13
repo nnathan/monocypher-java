@@ -3283,4 +3283,90 @@ public class MonocypherTest {
       assertEquals(expected, actual, "mac mismatch");
     }
   }
+
+  private static int fromHexLEToInt(String hex) {
+    if (hex.length() != 8) {
+      throw new IllegalArgumentException("Hex string must be exactly 8 characters for 4 bytes");
+    }
+
+    int result = 0;
+    for (int i = 0; i < 4; i++) {
+      int byteIndex = i * 2;
+      int value = Integer.parseInt(hex.substring(byteIndex, byteIndex + 2), 16);
+      result |= (value & 0xFF) << (8 * i); // little-endian shift
+    }
+
+    return result;
+  }
+
+  @Test
+  @Order(40)
+  public void test_crypto_poly1305_init() throws NoSuchFieldException, IllegalAccessException {
+    // poly1305 init
+    {
+      Poly1305_ctx ctx = mc.new Poly1305_ctx();
+      byte[] key =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+
+      mc.crypto_poly1305_init(ctx, key);
+
+      // c is uninitialised
+      // Field cField = Poly1305_ctx.class.getDeclaredField("c");
+      Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
+      Field rField = Poly1305_ctx.class.getDeclaredField("r");
+      Field padField = Poly1305_ctx.class.getDeclaredField("pad");
+      Field hField = Poly1305_ctx.class.getDeclaredField("h");
+
+      // c is uninitialised
+      // cField.setAccessible(true);
+      c_idxField.setAccessible(true);
+      rField.setAccessible(true);
+      padField.setAccessible(true);
+      hField.setAccessible(true);
+
+      // c is uninitialised
+      // byte[] c = (byte[]) cField.get(ctx);
+      long c_idx = (long) c_idxField.get(ctx);
+      int[] r = (int[]) rField.get(ctx);
+      int[] pad = (int[]) padField.get(ctx);
+      int[] h = (int[]) hField.get(ctx);
+
+      // c is uninitialised
+      // byte[] c_expected = fromHexToByteArray("010000000000000040ec266f01000000");
+
+      long c_idx_expected = fromHexLEToLong("0000000000000000");
+
+      int[] r_expected =
+          new int[] {
+            fromHexLEToInt("00010203"),
+            fromHexLEToInt("04050607"),
+            fromHexLEToInt("08090a0b"),
+            fromHexLEToInt("0c0d0e0f"),
+          };
+
+      int[] pad_expected =
+          new int[] {
+            fromHexLEToInt("10111213"),
+            fromHexLEToInt("14151617"),
+            fromHexLEToInt("18191a1b"),
+            fromHexLEToInt("1c1d1e1f"),
+          };
+
+      int[] h_expected =
+          new int[] {
+            fromHexLEToInt("00000000"),
+            fromHexLEToInt("00000000"),
+            fromHexLEToInt("00000000"),
+            fromHexLEToInt("00000000"),
+            fromHexLEToInt("00000000"),
+          };
+
+      // c is uninitialised
+      // assertArrayEquals(c_expected, c, "c mismatch");
+      assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
+      assertArrayEquals(r_expected, r, "r mismatch");
+      assertArrayEquals(pad_expected, pad, "pad mismatch");
+      assertArrayEquals(h_expected, h, "h mismatch");
+    }
+  }
 }
