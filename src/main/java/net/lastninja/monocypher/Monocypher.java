@@ -192,4 +192,12 @@ public class Monocypher {
       ByteBuffer key,
       ByteBuffer nonce,
       long ctr);
+
+  public native long crypto_chacha20_ietf(
+      ByteBuffer cipher_text,
+      ByteBuffer plain_text,
+      long text_size,
+      ByteBuffer key,
+      ByteBuffer nonce,
+      long ctr);
 }
