@@ -2860,4 +2860,22 @@ public class MonocypherTest {
       assertEquals(expected, actual, "r mismatch");
     }
   }
+
+  @Test
+  @Order(33)
+  public void test_crypto_eddsa_scalarbase() {
+    // crypto_eddsa_scalarbase happy path
+    {
+      byte[] scalar =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] point = new byte[32];
+
+      mc.crypto_eddsa_scalarbase(point, scalar);
+
+      String expected = "ca4a448c3fc4d04945da9fdf920976c05e9bbe3d8cebb1858ea44d587c5e63c3";
+      String actual = toHex(point);
+
+      assertEquals(expected, actual, "point mismatch");
+    }
+  }
 }
