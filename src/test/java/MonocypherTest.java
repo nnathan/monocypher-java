@@ -2897,4 +2897,120 @@ public class MonocypherTest {
       assertEquals(expected, actual, "out mismatch");
     }
   }
+
+  @Test
+  @Order(35)
+  public void test_crypto_chacha20_djb() {
+    // crypto_chacha20_djb happy path
+    {
+      ByteBuffer plain_text =
+          fromHexToByteBuffer(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  + "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+                  + "40");
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer nonce = fromHexToByteBuffer("0001020304050607");
+      ByteBuffer cipher_text = ByteBuffer.allocateDirect(65);
+      long text_size = cipher_text.remaining();
+
+      long ctr = 0;
+
+      ctr = mc.crypto_chacha20_djb(cipher_text, plain_text, text_size, key, nonce, ctr);
+
+      String expected =
+          "f799a38af590e06e8a1955f06806b97a6f468fb00217ea84f418b64de447ddde"
+              + "14857658571e6066186be36f2c64394635e28c6ade2965c6612f2f6717d51a25"
+              + "78";
+
+      String actual = toHex(cipher_text);
+
+      assertEquals(expected, actual, "cipher_text mismatch");
+
+      long expected_ctr = 2;
+
+      assertEquals(expected_ctr, ctr, "ctr mismatch");
+    }
+
+    // crypto_chacha20_djb incremental happy path
+    {
+      ByteBuffer plain_text =
+          fromHexToByteBuffer(
+              "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+                  + "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+                  + "40");
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer nonce = fromHexToByteBuffer("0001020304050607");
+      ByteBuffer cipher_text = ByteBuffer.allocateDirect(65);
+      ByteBuffer plain_text_view;
+      ByteBuffer cipher_text_view;
+      long text_size;
+      long ctr = 0;
+
+      {
+        plain_text_view = plain_text.duplicate();
+        cipher_text_view = cipher_text.duplicate();
+        plain_text_view.position(0).limit(64);
+        plain_text_view = plain_text_view.slice();
+        cipher_text_view.position(0).limit(64);
+        cipher_text_view = cipher_text_view.slice();
+        text_size = cipher_text_view.remaining();
+
+        ctr = mc.crypto_chacha20_djb(cipher_text_view, plain_text_view, text_size, key, nonce, ctr);
+      }
+
+      {
+        plain_text_view = plain_text.duplicate();
+        cipher_text_view = cipher_text.duplicate();
+        plain_text_view.position(64).limit(65);
+        plain_text_view = plain_text_view.slice();
+        cipher_text_view.position(64).limit(65);
+        cipher_text_view = cipher_text_view.slice();
+        text_size = cipher_text_view.remaining();
+
+        ctr = mc.crypto_chacha20_djb(cipher_text_view, plain_text_view, text_size, key, nonce, ctr);
+      }
+
+      String expected =
+          "f799a38af590e06e8a1955f06806b97a6f468fb00217ea84f418b64de447ddde"
+              + "14857658571e6066186be36f2c64394635e28c6ade2965c6612f2f6717d51a25"
+              + "78";
+
+      String actual = toHex(cipher_text);
+
+      assertEquals(expected, actual, "cipher_text mismatch");
+
+      long expected_ctr = 2;
+
+      assertEquals(expected_ctr, ctr, "ctr mismatch");
+    }
+
+    // crypto_chacha20_djb happy path with null plaintext
+    {
+      ByteBuffer plain_text = null;
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer nonce = fromHexToByteBuffer("0001020304050607");
+      ByteBuffer cipher_text = ByteBuffer.allocateDirect(65);
+      long text_size = cipher_text.remaining();
+
+      long ctr = 0;
+
+      ctr = mc.crypto_chacha20_djb(cipher_text, plain_text, text_size, key, nonce, ctr);
+
+      String expected =
+          "f798a189f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c1"
+              + "34a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a"
+              + "38";
+
+      String actual = toHex(cipher_text);
+
+      assertEquals(expected, actual, "cipher_text mismatch");
+
+      long expected_ctr = 2;
+
+      assertEquals(expected_ctr, ctr, "ctr mismatch");
+    }
+  }
 }

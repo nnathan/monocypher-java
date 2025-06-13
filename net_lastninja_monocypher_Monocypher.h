@@ -295,6 +295,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1s
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1h
   (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_chacha20_djb
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
+ */
+JNIEXPORT jlong JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1djb
+  (JNIEnv *, jobject, jobject, jobject, jlong, jobject, jobject, jlong);
+
 #ifdef __cplusplus
 }
 #endif
