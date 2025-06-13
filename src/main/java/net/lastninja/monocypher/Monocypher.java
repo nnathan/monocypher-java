@@ -170,4 +170,6 @@ public class Monocypher {
   public native void crypto_eddsa_key_pair(byte[] secret_key, byte[] public_key, byte[] seed);
 
   public native void crypto_eddsa_sign(byte[] signature, byte[] secret_key, byte[] message);
+
+  public native int crypto_eddsa_check(byte[] signature, byte[] public_key, byte[] message);
 }
