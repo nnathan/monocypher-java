@@ -2040,3 +2040,26 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev(
 
   return result;
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1map(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray curve,
+    jbyteArray hidden) {
+  (void)obj;
+
+  CHECK_NULL(curve, );
+  CHECK_NULL(hidden, );
+
+  ENSURE_ARRAY_LENGTH(curve, 32, );
+  ENSURE_ARRAY_LENGTH(hidden, 32, );
+
+  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
+  jbyte *curve_ptr = (*env)->GetByteArrayElements(env, curve, NULL);
+
+  crypto_elligator_map((uint8_t *)curve_ptr, (const uint8_t *)hidden_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, curve, curve_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, JNI_ABORT);
+}

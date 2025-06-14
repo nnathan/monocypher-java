@@ -230,4 +230,6 @@ public class Monocypher {
   public native void crypto_elligator_key_pair(byte[] hidden, byte[] secret_key, byte[] seed);
 
   public native int crypto_elligator_rev(byte[] hidden, byte[] curve, byte tweak);
+
+  public native void crypto_elligator_map(byte[] curve, byte[] hidden);
 }

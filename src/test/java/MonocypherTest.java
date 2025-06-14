@@ -3839,4 +3839,23 @@ public class MonocypherTest {
       }
     }
   }
+
+  @Test
+  @Order(46)
+  public void test_crypto_elligator_map() {
+    // crypto_elligator_map happy path
+    {
+      byte[] hidden =
+          fromHexToByteArray("9e5a7fa6532ba0750540700e7d0420fc0ba61f0fc126c9732d5569636c683f24");
+      byte[] curve = new byte[32];
+
+      mc.crypto_elligator_map(curve, hidden);
+
+      String expected = "4bccf87523680f38820e85a5956f1dba2bd9564dc8a92bf395b8996f41ce724a";
+
+      String actual = toHex(curve);
+
+      assertEquals(expected, actual, "curve mismatch");
+    }
+  }
 }
