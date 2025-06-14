@@ -1967,3 +1967,32 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1final(
 
   (*env)->ReleaseByteArrayElements(env, mac, mac_ptr, 0);
 }
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray hidden,
+    jbyteArray secret_key,
+    jbyteArray seed) {
+  (void)obj;
+
+  CHECK_NULL(hidden, );
+  CHECK_NULL(secret_key, );
+  CHECK_NULL(seed, );
+
+  ENSURE_ARRAY_LENGTH(hidden, 32, );
+  ENSURE_ARRAY_LENGTH(secret_key, 32, );
+  ENSURE_ARRAY_LENGTH(seed, 32, );
+
+  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
+  jbyte *secret_key_ptr = (*env)->GetByteArrayElements(env, secret_key, NULL);
+  jbyte *seed_ptr = (*env)->GetByteArrayElements(env, seed, NULL);
+
+  crypto_elligator_key_pair((uint8_t *)hidden_ptr, (uint8_t *)secret_key_ptr,
+                            (uint8_t *)seed_ptr);
+
+  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, seed, seed_ptr, 0);
+}

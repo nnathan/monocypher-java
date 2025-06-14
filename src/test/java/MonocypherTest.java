@@ -3649,4 +3649,34 @@ public class MonocypherTest {
       assertArrayEquals(h_expected, h, "h mismatch");
     }
   }
+
+  @Test
+  @Order(43)
+  public void test_crypto_elligator_key_pair() {
+    // crypto_elligator_key_pair happy path
+    {
+      byte[] seed =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] hidden = new byte[32];
+      byte[] secret = new byte[32];
+
+      mc.crypto_elligator_key_pair(hidden, secret, seed);
+
+      String hidden_expected = "f7e4a52e7996ca06d6d6cb8f4d11f2a89e30ca7df2a30cdadce51e5c84cb009d";
+      String hidden_actual = toHex(hidden);
+
+      assertEquals(hidden_expected, hidden_actual, "hidden mismatch");
+
+      String secret_expected = "9cacebfbb286731920ea82342050641ed065ea6431e85e1f3926028214e52507";
+      String secret_actual = toHex(secret);
+
+      assertEquals(secret_expected, secret_actual, "secret mismatch");
+
+      String seed_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+      String seed_actual = toHex(seed);
+
+      assertEquals(seed_expected, seed_actual, "seed mismatch");
+    }
+  }
+
 }
