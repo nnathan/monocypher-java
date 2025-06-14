@@ -1969,6 +1969,23 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1final(
 }
 
 JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Poly1305_1ctx_2(
+    JNIEnv *env,
+    jobject obj,
+    jobject poly1305_ctx) {
+  (void)obj;
+
+  if (!poly1305_ctx) {
+    return;
+  }
+
+  crypto_poly1305_ctx ctx;
+  crypto_wipe((void *)&ctx, sizeof(ctx));
+
+  TO_POLY1305_CTX_CLASS(ctx, poly1305_ctx);
+}
+
+JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair(
     JNIEnv *env,
     jobject obj,

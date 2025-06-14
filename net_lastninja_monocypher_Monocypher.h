@@ -353,6 +353,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Poly1305_1ctx_2
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_elligator_key_pair
  * Signature: ([B[B[B)V
  */
