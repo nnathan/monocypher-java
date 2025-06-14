@@ -226,4 +226,6 @@ public class Monocypher {
   public native void crypto_poly1305_final(Poly1305_ctx ctx, byte[] mac);
 
   public native void crypto_elligator_key_pair(byte[] hidden, byte[] secret_key, byte[] seed);
+
+  public native int crypto_elligator_rev(byte[] hidden, byte[] curve, byte tweak);
 }

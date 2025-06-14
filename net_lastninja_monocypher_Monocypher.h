@@ -359,6 +359,14 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair
   (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_elligator_rev
+ * Signature: ([B[BB)I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev
+  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyte);
+
 #ifdef __cplusplus
 }
 #endif

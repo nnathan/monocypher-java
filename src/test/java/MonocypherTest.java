@@ -3679,4 +3679,35 @@ public class MonocypherTest {
     }
   }
 
+  @Test
+  @Order(43)
+  public void test_crypto_elligator_rev() {
+    // crypto_elligator_rev happy path
+    {
+      byte[] secret =
+          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      byte[] hidden = new byte[32];
+      byte tweak = 0x00;
+
+      {
+        mc.crypto_x25519_dirty_small(hidden, secret);
+        int result = mc.crypto_elligator_rev(hidden, hidden, tweak);
+        int expected = -1;
+        assertEquals(expected, result, "crypto_elligator_rev mismatch");
+      }
+
+      secret[0]++;
+
+      {
+        mc.crypto_x25519_dirty_small(hidden, secret);
+        int result = mc.crypto_elligator_rev(hidden, hidden, tweak);
+        int expected = 0;
+        assertEquals(expected, result, "crypto_elligator_rev mismatch");
+
+        String hidden_expected = "9e5a7fa6532ba0750540700e7d0420fc0ba61f0fc126c9732d5569636c683f24";
+        String hidden_actual = toHex(hidden);
+        assertEquals(hidden_expected, hidden_actual, "hidden mismatch");
+      }
+    }
+  }
 }

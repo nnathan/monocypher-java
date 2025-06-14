@@ -1996,3 +1996,30 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair(
   (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, 0);
   (*env)->ReleaseByteArrayElements(env, seed, seed_ptr, 0);
 }
+
+JNIEXPORT jint JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev(
+    JNIEnv *env,
+    jobject obj,
+    jbyteArray hidden,
+    jbyteArray curve,
+    jbyte tweak) {
+  (void)obj;
+
+  CHECK_NULL(hidden, -1);
+  CHECK_NULL(curve, -1);
+
+  ENSURE_ARRAY_LENGTH(hidden, 32, -1);
+  ENSURE_ARRAY_LENGTH(curve, 32, -1);
+
+  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
+  jbyte *curve_ptr = (*env)->GetByteArrayElements(env, curve, NULL);
+
+  int result = crypto_elligator_rev((uint8_t *)hidden_ptr,
+                                    (const uint8_t *)curve_ptr, (uint8_t)tweak);
+
+  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, 0);
+  (*env)->ReleaseByteArrayElements(env, curve, curve_ptr, JNI_ABORT);
+
+  return result;
+}
