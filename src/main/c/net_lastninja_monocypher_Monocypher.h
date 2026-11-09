@@ -306,34 +306,34 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1s
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_chacha20_h
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1h
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_chacha20_djb
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
  */
 JNIEXPORT jlong JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1djb
-  (JNIEnv *, jobject, jobject, jobject, jlong, jobject, jobject, jlong);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jlong);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_chacha20_ietf
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
  */
 JNIEXPORT jlong JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1ietf
-  (JNIEnv *, jobject, jobject, jobject, jlong, jobject, jobject, jlong);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jlong);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_chacha20_x
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;J)J
  */
 JNIEXPORT jlong JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1x
-  (JNIEnv *, jobject, jobject, jobject, jlong, jobject, jobject, jlong);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jlong);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher

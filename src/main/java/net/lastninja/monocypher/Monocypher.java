@@ -168,31 +168,16 @@ public class Monocypher {
 
   public native void crypto_eddsa_scalarbase(byte[] point, byte[] scalar);
 
-  public native void crypto_chacha20_h(byte[] out, byte[] key, byte[] in);
+  public static native void crypto_chacha20_h(ByteBuffer out, ByteBuffer key, ByteBuffer in);
 
-  public native long crypto_chacha20_djb(
-      ByteBuffer cipher_text,
-      ByteBuffer plain_text,
-      long text_size,
-      ByteBuffer key,
-      ByteBuffer nonce,
-      long ctr);
+  public static native long crypto_chacha20_djb(
+      ByteBuffer cipher_text, ByteBuffer plain_text, ByteBuffer key, ByteBuffer nonce, long ctr);
 
-  public native long crypto_chacha20_ietf(
-      ByteBuffer cipher_text,
-      ByteBuffer plain_text,
-      long text_size,
-      ByteBuffer key,
-      ByteBuffer nonce,
-      long ctr);
+  public static native long crypto_chacha20_ietf(
+      ByteBuffer cipher_text, ByteBuffer plain_text, ByteBuffer key, ByteBuffer nonce, long ctr);
 
-  public native long crypto_chacha20_x(
-      ByteBuffer cipher_text,
-      ByteBuffer plain_text,
-      long text_size,
-      ByteBuffer key,
-      ByteBuffer nonce,
-      long ctr);
+  public static native long crypto_chacha20_x(
+      ByteBuffer cipher_text, ByteBuffer plain_text, ByteBuffer key, ByteBuffer nonce, long ctr);
 
   public native void crypto_poly1305(ByteBuffer mac, ByteBuffer message, byte[] key);
 

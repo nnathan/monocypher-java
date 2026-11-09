@@ -48,7 +48,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
   return JNI_VERSION_1_6;
 }
 
-static bool throw_iae(JNIEnv *env, const char *name, const char *problem) {
+bool mc_throw_iae(JNIEnv *env, const char *name, const char *problem) {
   char msg[128];
   snprintf(msg, sizeof(msg), "%s %s", name, problem);
   (*env)->ThrowNew(env, illegal_argument, msg);
@@ -63,14 +63,14 @@ bool mc_input(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
     return false;
   }
   if (!(*env)->CallBooleanMethod(env, bb, bb_is_direct)) {
-    return throw_iae(env, name, "must be a direct ByteBuffer");
+    return mc_throw_iae(env, name, "must be a direct ByteBuffer");
   }
 
   uint8_t *base = (*env)->GetDirectBufferAddress(env, bb);
   jint position = (*env)->CallIntMethod(env, bb, bb_position);
   jint remaining = (*env)->CallIntMethod(env, bb, bb_remaining);
   if (base == NULL && remaining > 0) {
-    return throw_iae(env, name, "has no accessible address");
+    return mc_throw_iae(env, name, "has no accessible address");
   }
 
   out->ptr = base == NULL ? NULL : base + position;
@@ -90,7 +90,7 @@ bool mc_input_opt(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
 bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
   if (!mc_input(env, bb, name, out)) return false;
   if ((*env)->CallBooleanMethod(env, bb, bb_is_read_only)) {
-    return throw_iae(env, name, "must not be read-only");
+    return mc_throw_iae(env, name, "must not be read-only");
   }
   return true;
 }
@@ -101,7 +101,7 @@ bool mc_require_len(JNIEnv *env, const mc_buf *b, const char *name, size_t len) 
   char problem[64];
   snprintf(problem, sizeof(problem), "must have exactly %lu bytes remaining",
            (unsigned long)len);
-  return throw_iae(env, name, problem);
+  return mc_throw_iae(env, name, problem);
 }
 
 bool mc_require_same_len(JNIEnv *env, const mc_buf *a, const char *a_name,
@@ -110,7 +110,7 @@ bool mc_require_same_len(JNIEnv *env, const mc_buf *a, const char *a_name,
 
   char problem[64];
   snprintf(problem, sizeof(problem), "must have the same length as %s", b_name);
-  return throw_iae(env, a_name, problem);
+  return mc_throw_iae(env, a_name, problem);
 }
 
 static bool overlaps(const mc_buf *a, const mc_buf *b) {
@@ -128,7 +128,7 @@ bool mc_check_overlap(JNIEnv *env, const mc_buf *a, const char *a_name,
 
   char problem[64];
   snprintf(problem, sizeof(problem), "must be the same memory as %s or not overlap it", b_name);
-  return throw_iae(env, a_name, problem);
+  return mc_throw_iae(env, a_name, problem);
 }
 
 bool mc_check_disjoint(JNIEnv *env, const mc_buf *a, const char *a_name,
@@ -137,7 +137,7 @@ bool mc_check_disjoint(JNIEnv *env, const mc_buf *a, const char *a_name,
 
   char problem[64];
   snprintf(problem, sizeof(problem), "must not overlap %s", b_name);
-  return throw_iae(env, a_name, problem);
+  return mc_throw_iae(env, a_name, problem);
 }
 
 /* Up to 7 bytes to reach 8-byte alignment, and one state byte after the struct. */
@@ -158,7 +158,7 @@ bool mc_ctx_get(JNIEnv *env, jobject j_ctx, size_t size, void **ctx) {
   jobject mem = (*env)->GetObjectField(env, j_ctx, ctx_mem);
   uint8_t *base = (*env)->GetDirectBufferAddress(env, mem);
   if (base == NULL || (*env)->GetDirectBufferCapacity(env, mem) != (jlong)mc_ctx_alloc_size(size)) {
-    return throw_iae(env, "ctx", "has invalid memory");
+    return mc_throw_iae(env, "ctx", "has invalid memory");
   }
 
   uintptr_t aligned = ((uintptr_t)base + (CTX_ALIGNMENT - 1)) & ~(uintptr_t)(CTX_ALIGNMENT - 1);

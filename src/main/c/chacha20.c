@@ -2,238 +2,109 @@
 
 JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1h(JNIEnv *env,
-                                                             jobject obj,
-                                                             jbyteArray out,
-                                                             jbyteArray key,
-                                                             jbyteArray in) {
-  (void)obj;
+                                                             jclass cls,
+                                                             jobject j_out,
+                                                             jobject j_key,
+                                                             jobject j_in) {
+  (void)cls;
 
-  CHECK_NULL(out, );
-  CHECK_NULL(key, );
-  CHECK_NULL(in, );
+  /* No overlap check: Monocypher's tests require arbitrary overlap to work here. */
+  mc_buf out, key, in;
+  if (!mc_output(env, j_out, "out", &out)) return;
+  if (!mc_input(env, j_key, "key", &key)) return;
+  if (!mc_input(env, j_in, "in", &in)) return;
+  if (!mc_require_len(env, &out, "out", 32)) return;
+  if (!mc_require_len(env, &key, "key", 32)) return;
+  if (!mc_require_len(env, &in, "in", 16)) return;
 
-  ENSURE_ARRAY_LENGTH(out, 32, );
-  ENSURE_ARRAY_LENGTH(key, 32, );
-  ENSURE_ARRAY_LENGTH(in, 16, );
+  crypto_chacha20_h(out.ptr, key.ptr, in.ptr);
+}
 
-  jbyte *out_ptr = (*env)->GetByteArrayElements(env, out, NULL);
-  jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
-  jbyte *in_ptr = (*env)->GetByteArrayElements(env, in, NULL);
+typedef struct {
+  mc_buf cipher_text;
+  mc_buf plain_text;
+  mc_buf key;
+  mc_buf nonce;
+} stream_args;
 
-  crypto_chacha20_h((uint8_t *)out_ptr, (const uint8_t *)key_ptr,
-                    (const uint8_t *)in_ptr);
+/* A null plain_text is allowed, and stands for an all-zero input. */
+static bool get_stream_args(JNIEnv *env,
+                            jobject j_cipher_text,
+                            jobject j_plain_text,
+                            jobject j_key,
+                            jobject j_nonce,
+                            size_t nonce_len,
+                            stream_args *a) {
+  if (!mc_output(env, j_cipher_text, "cipher_text", &a->cipher_text)) return false;
+  if (!mc_input_opt(env, j_plain_text, "plain_text", &a->plain_text)) return false;
+  if (!mc_input(env, j_key, "key", &a->key)) return false;
+  if (!mc_input(env, j_nonce, "nonce", &a->nonce)) return false;
 
-  (*env)->ReleaseByteArrayElements(env, out, out_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
-  (*env)->ReleaseByteArrayElements(env, in, in_ptr, JNI_ABORT);
+  if (!mc_require_len(env, &a->key, "key", 32)) return false;
+  if (!mc_require_len(env, &a->nonce, "nonce", nonce_len)) return false;
+  if (j_plain_text != NULL &&
+      !mc_require_same_len(env, &a->plain_text, "plain_text", &a->cipher_text, "cipher_text")) {
+    return false;
+  }
+
+  return mc_check_overlap(env, &a->cipher_text, "cipher_text", &a->plain_text, "plain_text") &&
+         mc_check_disjoint(env, &a->key, "key", &a->cipher_text, "cipher_text") &&
+         mc_check_disjoint(env, &a->nonce, "nonce", &a->cipher_text, "cipher_text");
 }
 
 JNIEXPORT jlong JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1djb(
-    JNIEnv *env,
-    jobject obj,
-    jobject cipher_text,
-    jobject plain_text,
-    jlong text_size,
-    jobject key,
-    jobject nonce,
-    jlong ctr) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1djb(JNIEnv *env,
+                                                               jclass cls,
+                                                               jobject j_cipher_text,
+                                                               jobject j_plain_text,
+                                                               jobject j_key,
+                                                               jobject j_nonce,
+                                                               jlong ctr) {
+  (void)cls;
 
-  CHECK_NULL(cipher_text, 0);
-  CHECK_NULL(key, 0);
-  CHECK_NULL(nonce, 0);
+  stream_args a;
+  if (!get_stream_args(env, j_cipher_text, j_plain_text, j_key, j_nonce, 8, &a)) return 0;
 
-  INIT_BYTE_BUFFER_CLASS(bbClass);
-
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, cipher_text, 0);
-  if (plain_text) {
-    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, plain_text, 0);
-  }
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, key, 0);
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, nonce, 0);
-
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, key, 32, 0);
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, nonce, 8, 0);
-
-  if (text_size < 0) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "text_size must be non-negative");
-    return 0;
-  }
-
-  size_t cipher_text_len =
-      (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
-
-  if (cipher_text_len != (size_t)text_size) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc,
-                     "cipher_text length needs to be the same as text_size");
-    return 0;
-  }
-
-  if (plain_text) {
-    size_t plain_text_len =
-        (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
-
-    if (cipher_text_len != plain_text_len) {
-      jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-      (*env)->ThrowNew(env, exc,
-                       "plain_text needs to be same length as cipher_text");
-      return 0;
-    }
-  }
-
-  jbyte *cipher_text_ptr = (*env)->GetDirectBufferAddress(env, cipher_text);
-  jbyte *plain_text_ptr =
-      plain_text ? (*env)->GetDirectBufferAddress(env, plain_text) : NULL;
-  jbyte *key_ptr = (*env)->GetDirectBufferAddress(env, key);
-  jbyte *nonce_ptr = (*env)->GetDirectBufferAddress(env, nonce);
-
-  uint64_t result = crypto_chacha20_djb(
-      (uint8_t *)cipher_text_ptr, (const uint8_t *)plain_text_ptr,
-      (size_t)text_size, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr,
-      (uint64_t)ctr);
-
-  return result;
+  return (jlong)crypto_chacha20_djb(a.cipher_text.ptr, a.plain_text.ptr, a.cipher_text.len,
+                                    a.key.ptr, a.nonce.ptr, (uint64_t)ctr);
 }
 
 JNIEXPORT jlong JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1ietf(
-    JNIEnv *env,
-    jobject obj,
-    jobject cipher_text,
-    jobject plain_text,
-    jlong text_size,
-    jobject key,
-    jobject nonce,
-    jlong ctr) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1ietf(JNIEnv *env,
+                                                                jclass cls,
+                                                                jobject j_cipher_text,
+                                                                jobject j_plain_text,
+                                                                jobject j_key,
+                                                                jobject j_nonce,
+                                                                jlong ctr) {
+  (void)cls;
 
-  CHECK_NULL(cipher_text, 0);
-  CHECK_NULL(key, 0);
-  CHECK_NULL(nonce, 0);
-
-  INIT_BYTE_BUFFER_CLASS(bbClass);
-
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, cipher_text, 0);
-  if (plain_text) {
-    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, plain_text, 0);
-  }
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, key, 0);
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, nonce, 0);
-
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, key, 32, 0);
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, nonce, 12, 0);
-
-  if (text_size < 0) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "text_size must be non-negative");
+  /* The C counter is 32 bits: truncating a larger value would reuse keystream. */
+  if (ctr < 0 || ctr > (jlong)UINT32_MAX) {
+    mc_throw_iae(env, "ctr", "must be between 0 and 4294967295");
     return 0;
   }
 
-  size_t cipher_text_len =
-      (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
+  stream_args a;
+  if (!get_stream_args(env, j_cipher_text, j_plain_text, j_key, j_nonce, 12, &a)) return 0;
 
-  if (cipher_text_len != (size_t)text_size) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc,
-                     "cipher_text length needs to be the same as text_size");
-    return 0;
-  }
-
-  if (plain_text) {
-    size_t plain_text_len =
-        (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
-
-    if (cipher_text_len != plain_text_len) {
-      jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-      (*env)->ThrowNew(env, exc,
-                       "plain_text needs to be same length as cipher_text");
-      return 0;
-    }
-  }
-
-  jbyte *cipher_text_ptr = (*env)->GetDirectBufferAddress(env, cipher_text);
-  jbyte *plain_text_ptr =
-      plain_text ? (*env)->GetDirectBufferAddress(env, plain_text) : NULL;
-  jbyte *key_ptr = (*env)->GetDirectBufferAddress(env, key);
-  jbyte *nonce_ptr = (*env)->GetDirectBufferAddress(env, nonce);
-
-  uint64_t result = crypto_chacha20_ietf(
-      (uint8_t *)cipher_text_ptr, (const uint8_t *)plain_text_ptr,
-      (size_t)text_size, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr,
-      (uint64_t)ctr);
-
-  return result;
+  return (jlong)crypto_chacha20_ietf(a.cipher_text.ptr, a.plain_text.ptr, a.cipher_text.len,
+                                     a.key.ptr, a.nonce.ptr, (uint32_t)ctr);
 }
 
 JNIEXPORT jlong JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1x(
-    JNIEnv *env,
-    jobject obj,
-    jobject cipher_text,
-    jobject plain_text,
-    jlong text_size,
-    jobject key,
-    jobject nonce,
-    jlong ctr) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1x(JNIEnv *env,
+                                                             jclass cls,
+                                                             jobject j_cipher_text,
+                                                             jobject j_plain_text,
+                                                             jobject j_key,
+                                                             jobject j_nonce,
+                                                             jlong ctr) {
+  (void)cls;
 
-  CHECK_NULL(cipher_text, 0);
-  CHECK_NULL(key, 0);
-  CHECK_NULL(nonce, 0);
+  stream_args a;
+  if (!get_stream_args(env, j_cipher_text, j_plain_text, j_key, j_nonce, 24, &a)) return 0;
 
-  INIT_BYTE_BUFFER_CLASS(bbClass);
-
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, cipher_text, 0);
-  if (plain_text) {
-    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, plain_text, 0);
-  }
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, key, 0);
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, nonce, 0);
-
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, key, 32, 0);
-  ENSURE_BYTE_BUFFER_LENGTH(bbClass, nonce, 24, 0);
-
-  if (text_size < 0) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "text_size must be non-negative");
-    return 0;
-  }
-
-  size_t cipher_text_len =
-      (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
-
-  if (cipher_text_len != (size_t)text_size) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc,
-                     "cipher_text length needs to be the same as text_size");
-    return 0;
-  }
-
-  if (plain_text) {
-    size_t plain_text_len =
-        (size_t)(*env)->CallIntMethod(env, cipher_text, bbClass_remaining);
-
-    if (cipher_text_len != plain_text_len) {
-      jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-      (*env)->ThrowNew(env, exc,
-                       "plain_text needs to be same length as cipher_text");
-      return 0;
-    }
-  }
-
-  jbyte *cipher_text_ptr = (*env)->GetDirectBufferAddress(env, cipher_text);
-  jbyte *plain_text_ptr =
-      plain_text ? (*env)->GetDirectBufferAddress(env, plain_text) : NULL;
-  jbyte *key_ptr = (*env)->GetDirectBufferAddress(env, key);
-  jbyte *nonce_ptr = (*env)->GetDirectBufferAddress(env, nonce);
-
-  uint64_t result = crypto_chacha20_x(
-      (uint8_t *)cipher_text_ptr, (const uint8_t *)plain_text_ptr,
-      (size_t)text_size, (const uint8_t *)key_ptr, (const uint8_t *)nonce_ptr,
-      (uint64_t)ctr);
-
-  return result;
+  return (jlong)crypto_chacha20_x(a.cipher_text.ptr, a.plain_text.ptr, a.cipher_text.len,
+                                  a.key.ptr, a.nonce.ptr, (uint64_t)ctr);
 }

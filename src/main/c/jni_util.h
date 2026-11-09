@@ -48,6 +48,9 @@ bool mc_input_opt(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
  */
 bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
 
+/* Throws IllegalArgumentException with "<name> <problem>". Always returns false. */
+bool mc_throw_iae(JNIEnv *env, const char *name, const char *problem);
+
 /* Throws IllegalArgumentException unless b has exactly len bytes. */
 bool mc_require_len(JNIEnv *env, const mc_buf *b, const char *name, size_t len);
 
