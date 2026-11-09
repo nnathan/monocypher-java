@@ -1,0 +1,58 @@
+name: natives
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/docker-build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: natives
+          path: |
+            build/native
+            build/smoke
+
+  smoke-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives
+          path: build
+      - uses: docker/setup-qemu-action@v3
+      - run: scripts/smoke-linux.sh
+
+  smoke-host:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, target: macos-arm64, lib: libmonocypher_jni.dylib, distribution: zulu, java: "8", arch: aarch64 }
+          - { os: macos-15, target: macos-arm64, lib: libmonocypher_jni.dylib, distribution: temurin, java: "25", arch: aarch64 }
+          - { os: macos-15-intel, target: macos-x86_64, lib: libmonocypher_jni.dylib, distribution: temurin, java: "8", arch: x64 }
+          - { os: windows-latest, target: windows-x86_64, lib: monocypher_jni.dll, distribution: temurin, java: "8", arch: x64 }
+          - { os: windows-latest, target: windows-x86_64, lib: monocypher_jni.dll, distribution: temurin, java: "25", arch: x64 }
+          - { os: windows-latest, target: windows-x86, lib: monocypher_jni.dll, distribution: temurin, java: "8", arch: x86 }
+          # Java 8 has no Windows arm64 build.
+          - { os: windows-11-arm, target: windows-arm64, lib: monocypher_jni.dll, distribution: temurin, java: "25", arch: aarch64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives
+          path: build
+      - uses: actions/setup-java@v4
+        with:
+          distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
+          architecture: ${{ matrix.arch }}
+      - run: java -cp build/smoke net.lastninja.monocypher.Monocypher "${{ github.workspace }}/build/native/${{ matrix.target }}/${{ matrix.lib }}"
+        shell: bash
