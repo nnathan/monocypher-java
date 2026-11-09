@@ -117,4 +117,28 @@ public final class TestUtil {
   public static int ctxStructSize(Object ctx) {
     return ((Monocypher.Ctx) ctx).mem.capacity() - 8;
   }
+
+  /** Overwrites a context's whole memory, including its state, as if it held garbage. */
+  public static void ctxFill(Object ctx, byte value) {
+    ByteBuffer mem = ((Monocypher.Ctx) ctx).mem;
+    for (int i = 0; i < mem.capacity(); i++) {
+      mem.put(i, value);
+    }
+  }
+
+  /**
+   * Whether two contexts hold the same struct. The struct's offset in each buffer depends on
+   * alignment, so every possible window of a is searched for in b.
+   */
+  public static boolean ctxSameStruct(Object a, Object b) {
+    ByteBuffer mem = ((Monocypher.Ctx) a).mem;
+    byte[] window = new byte[ctxStructSize(a)];
+    for (int start = 0; start + window.length <= mem.capacity(); start++) {
+      for (int i = 0; i < window.length; i++) {
+        window[i] = mem.get(start + i);
+      }
+      if (ctxContains(b, window)) return true;
+    }
+    return false;
+  }
 }
