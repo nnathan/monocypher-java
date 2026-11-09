@@ -4,7 +4,7 @@
 # scripts/docker-build.sh so the toolchain versions stay pinned.
 set -euo pipefail
 
-SRC=(vendor/monocypher/src/monocypher.c src/main/c/*.c)
+SRC=(vendor/monocypher/src/monocypher.c vendor/monocypher/src/optional/monocypher-ed25519.c src/main/c/*.c)
 OUT=build/native
 LOGS=$(mktemp -d)
 CFLAGS=(-O3 -fPIC -shared -fvisibility=hidden -Wall -Wextra -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni)

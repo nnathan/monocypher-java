@@ -377,6 +377,158 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligato
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1map
   (JNIEnv *, jclass, jobject, jobject);
 
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    sizeof_sha512_ctx
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_sizeof_1sha512_1ctx
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_init
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_ctx;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1init
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_update
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_ctx;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1update
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_final
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_ctx;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1final
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_ctx;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_SHA512_1ctx_2
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hmac
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hmac
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    sizeof_sha512_hmac_ctx
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_sizeof_1sha512_1hmac_1ctx
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hmac_init
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_HMAC_ctx;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hmac_1init
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hmac_update
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_HMAC_ctx;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hmac_1update
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hmac_final
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_HMAC_ctx;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hmac_1final
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_wipe
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/SHA512_HMAC_ctx;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_SHA512_1HMAC_1ctx_2
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hkdf_expand
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hkdf_1expand
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_sha512_hkdf
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1sha512_1hkdf
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_ed25519_key_pair
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1ed25519_1key_1pair
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_ed25519_sign
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1ed25519_1sign
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_ed25519_check
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1ed25519_1check
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_ed25519_ph_sign
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1ed25519_1ph_1sign
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_ed25519_ph_check
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1ed25519_1ph_1check
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

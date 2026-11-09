@@ -244,4 +244,77 @@ public class Monocypher {
   public static native int crypto_elligator_rev(ByteBuffer hidden, ByteBuffer curve, int tweak);
 
   public static native void crypto_elligator_map(ByteBuffer curve, ByteBuffer hidden);
+
+  public static native void crypto_sha512(ByteBuffer hash, ByteBuffer message);
+
+  private static native int sizeof_sha512_ctx();
+
+  public static final class SHA512_ctx extends Ctx implements AutoCloseable {
+    public SHA512_ctx() {
+      super(sizeof_sha512_ctx());
+    }
+
+    @Override
+    public void close() {
+      crypto_wipe(this);
+    }
+  }
+
+  public static native void crypto_sha512_init(SHA512_ctx ctx);
+
+  public static native void crypto_sha512_update(SHA512_ctx ctx, ByteBuffer message);
+
+  /** Wipes ctx, so it must be initialised again before reuse. */
+  public static native void crypto_sha512_final(SHA512_ctx ctx, ByteBuffer hash);
+
+  public static native void crypto_wipe(SHA512_ctx ctx);
+
+  public static native void crypto_sha512_hmac(ByteBuffer hmac, ByteBuffer key, ByteBuffer message);
+
+  private static native int sizeof_sha512_hmac_ctx();
+
+  public static final class SHA512_HMAC_ctx extends Ctx implements AutoCloseable {
+    public SHA512_HMAC_ctx() {
+      super(sizeof_sha512_hmac_ctx());
+    }
+
+    @Override
+    public void close() {
+      crypto_wipe(this);
+    }
+  }
+
+  public static native void crypto_sha512_hmac_init(SHA512_HMAC_ctx ctx, ByteBuffer key);
+
+  public static native void crypto_sha512_hmac_update(SHA512_HMAC_ctx ctx, ByteBuffer message);
+
+  /** Wipes ctx, so it must be initialised again before reuse. */
+  public static native void crypto_sha512_hmac_final(SHA512_HMAC_ctx ctx, ByteBuffer hmac);
+
+  public static native void crypto_wipe(SHA512_HMAC_ctx ctx);
+
+  /** okm must have at most 16320 bytes remaining, and must not overlap prk or info. */
+  public static native void crypto_sha512_hkdf_expand(ByteBuffer okm, ByteBuffer prk, ByteBuffer info);
+
+  /** okm must have at most 16320 bytes remaining, and must not overlap ikm, salt or info. */
+  public static native void crypto_sha512_hkdf(
+      ByteBuffer okm, ByteBuffer ikm, ByteBuffer salt, ByteBuffer info);
+
+  /** Monocypher wipes the seed, so it must be writable. */
+  public static native void crypto_ed25519_key_pair(
+      ByteBuffer secret_key, ByteBuffer public_key, ByteBuffer seed);
+
+  public static native void crypto_ed25519_sign(
+      ByteBuffer signature, ByteBuffer secret_key, ByteBuffer message);
+
+  /** Returns 0 if the signature is valid, -1 otherwise. */
+  public static native int crypto_ed25519_check(
+      ByteBuffer signature, ByteBuffer public_key, ByteBuffer message);
+
+  public static native void crypto_ed25519_ph_sign(
+      ByteBuffer signature, ByteBuffer secret_key, ByteBuffer message_hash);
+
+  /** Returns 0 if the signature is valid, -1 otherwise. */
+  public static native int crypto_ed25519_ph_check(
+      ByteBuffer signature, ByteBuffer public_key, ByteBuffer message_hash);
 }

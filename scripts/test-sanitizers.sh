@@ -13,7 +13,7 @@ mkdir -p build/sanitizers build/native
 gcc -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined \
   -fno-sanitize-recover=undefined -fPIC -shared -fvisibility=hidden -w \
   -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni -Ithird_party/jni/unix \
-  vendor/monocypher/src/monocypher.c src/main/c/*.c \
+  vendor/monocypher/src/monocypher.c vendor/monocypher/src/optional/monocypher-ed25519.c src/main/c/*.c \
   -o build/sanitizers/libmonocypher_jni.so
 
 # handle_segv=0 because HotSpot relies on its own SIGSEGV handler.

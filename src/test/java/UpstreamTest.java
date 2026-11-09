@@ -22,14 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *
  * <p>The vectors are vendored, see {@code src/test/resources/upstream/PROVENANCE.md}.
  *
- * <p>These parts of {@code test.c} are not ported:
- *
- * <ul>
- *   <li>SHA-512, HMAC-SHA-512, HKDF-SHA-512 and Ed25519, as these bindings do not include
- *       Monocypher's optional {@code monocypher-ed25519.h}.
- *   <li>BLAKE2b vectors with a zero-length hash, as the manual requires a hash size between 1 and
- *       64 and the binding enforces that.
- * </ul>
+ * <p>BLAKE2b vectors with a zero-length hash are not ported, as the manual requires a hash size
+ * between 1 and 64 and the binding enforces that.
  *
  * <p>The Argon2 overlap test is adapted: upstream overlaps the hash and inputs with the work area,
  * which the binding rejects. Here the inputs overlap each other, as the manual allows, and the
@@ -605,10 +599,125 @@ public class UpstreamTest {
     }
   }
 
-  // Argon2
+  // SHA-512
+
+  @Test
+  @Order(44)
+  public void sha512_vectors() {
+    for (byte[][] t : vectors("sha512", 2, 256)) {
+      ByteBuffer hash = out(64);
+      crypto_sha512(hash, buf(t[0]));
+      assertArrayEquals(t[1], bytes(hash));
+    }
+  }
+
+  @Test
+  @Order(45)
+  public void sha512_hmac_vectors() {
+    for (byte[][] t : vectors("sha512_hmac", 3, 343)) {
+      ByteBuffer hmac = out(64);
+      crypto_sha512_hmac(hmac, buf(t[0]), buf(t[1]));
+      assertArrayEquals(t[2], bytes(hmac));
+    }
+  }
+
+  @Test
+  @Order(46)
+  public void sha512_hkdf_vectors() {
+    for (byte[][] t : vectors("sha512_hkdf", 4, 20)) {
+      ByteBuffer okm = out(t[3].length);
+      crypto_sha512_hkdf(okm, buf(t[0]), buf(t[1]), buf(t[2]));
+      assertArrayEquals(t[3], bytes(okm));
+    }
+  }
+
+  @Test
+  @Order(47)
+  public void sha512_incremental() {
+    int inputSize = 128 * 4 - 32;
+    ByteBuffer input = new Rng().buffer(inputSize);
+    ByteBuffer whole = out(64);
+    ByteBuffer chunk = out(64);
+    crypto_sha512(whole, input);
+
+    try (SHA512_ctx ctx = new SHA512_ctx()) {
+      for (int j = 0; j < inputSize; j++) {
+        for (int i = 0; i <= j; i++) {
+          crypto_sha512_init(ctx);
+          crypto_sha512_update(ctx, slice(input, 0, i));
+          crypto_sha512_update(ctx, slice(input, i, j - i));
+          crypto_sha512_update(ctx, slice(input, j, inputSize - j));
+          crypto_sha512_final(ctx, chunk);
+
+          assertArrayEquals(bytes(whole), bytes(chunk));
+        }
+      }
+    }
+  }
+
+  @Test
+  @Order(48)
+  public void sha512_overlapping_io() {
+    int inputSize = 128 + 2 * 64;
+    Rng rng = new Rng();
+
+    for (int i = 0; i < 128 + 64; i++) {
+      ByteBuffer input = rng.buffer(inputSize);
+      ByteBuffer hash = out(64);
+
+      crypto_sha512(hash, slice(input, 64, 128));
+      crypto_sha512(slice(input, i, 64), slice(input, 64, 128));
+
+      assertArrayEquals(bytes(hash), bytes(slice(input, i, 64)));
+    }
+  }
+
+  @Test
+  @Order(49)
+  public void sha512_hmac_incremental() {
+    int inputSize = 128 * 4 - 32;
+    Rng rng = new Rng();
+
+    for (int i = 0; i < inputSize; i++) {
+      ByteBuffer key = rng.buffer(32);
+      ByteBuffer input = rng.buffer(inputSize);
+      ByteBuffer chunk = out(64);
+      ByteBuffer whole = out(64);
+
+      try (SHA512_HMAC_ctx ctx = new SHA512_HMAC_ctx()) {
+        crypto_sha512_hmac_init(ctx, key);
+        crypto_sha512_hmac_update(ctx, slice(input, 0, i));
+        crypto_sha512_hmac_update(ctx, slice(input, i, inputSize - i));
+        crypto_sha512_hmac_final(ctx, chunk);
+      }
+      crypto_sha512_hmac(whole, key, input);
+
+      assertArrayEquals(bytes(whole), bytes(chunk));
+    }
+  }
 
   @Test
   @Order(50)
+  public void sha512_hmac_overlapping_io() {
+    int inputSize = 128 + 2 * 64;
+    Rng rng = new Rng();
+
+    for (int i = 0; i < 128 + 64; i++) {
+      ByteBuffer key = rng.buffer(32);
+      ByteBuffer input = rng.buffer(inputSize);
+      ByteBuffer hmac = out(64);
+
+      crypto_sha512_hmac(hmac, key, slice(input, 64, 128));
+      crypto_sha512_hmac(slice(input, i, 64), key, slice(input, 64, 128));
+
+      assertArrayEquals(bytes(hmac), bytes(slice(input, i, 64)));
+    }
+  }
+
+  // Argon2
+
+  @Test
+  @Order(51)
   public void argon2_vectors() {
     for (byte[][] t : vectors("argon2", 9, 28)) {
       crypto_argon2_algorithm algorithm = crypto_argon2_algorithm.values()[(int) le32(t[0])];
@@ -629,7 +738,7 @@ public class UpstreamTest {
   }
 
   @Test
-  @Order(51)
+  @Order(52)
   public void argon2_overlapping_io() {
     Rng rng = new Rng();
     Argon2_config config = new Argon2_config(CRYPTO_ARGON2_I, 8, 1, 1);
@@ -935,6 +1044,70 @@ public class UpstreamTest {
       crypto_eddsa_sign(slice(input, i, 64), sk, slice(input, 64, messageSize));
 
       assertArrayEquals(bytes(signature), bytes(slice(input, i, 64)));
+    }
+  }
+
+  // Ed25519
+
+  @Test
+  @Order(76)
+  public void ed25519_vectors() {
+    for (byte[][] t : vectors("ed_25519", 4, 256)) {
+      ByteBuffer signature = out(64);
+      crypto_ed25519_sign(signature, buf(concat(t[0], t[1])), buf(t[2]));
+      assertArrayEquals(t[3], bytes(signature));
+    }
+  }
+
+  @Test
+  @Order(77)
+  public void ed25519_pk_vectors() {
+    for (byte[][] t : vectors("ed_25519_pk", 2, 257)) {
+      ByteBuffer seed = buf(t[0]);
+      ByteBuffer secretKey = out(64);
+      ByteBuffer publicKey = out(32);
+
+      crypto_ed25519_key_pair(secretKey, publicKey, seed);
+
+      assertArrayEquals(t[1], bytes(publicKey));
+      assertArrayEquals(new byte[32], bytes(seed));
+      assertArrayEquals(t[0], bytes(slice(secretKey, 0, 32)));
+      assertArrayEquals(bytes(publicKey), bytes(slice(secretKey, 32, 32)));
+    }
+  }
+
+  @Test
+  @Order(78)
+  public void ed25519_check_vectors() {
+    for (byte[][] t : vectors("ed_25519_check", 4, 330)) {
+      int check = crypto_ed25519_check(buf(t[2]), buf(t[0]), buf(t[1]));
+      assertEquals(t[3][0], (byte) check);
+    }
+  }
+
+  @Test
+  @Order(79)
+  public void ed25519ph_vectors() {
+    for (byte[][] t : vectors("ed_25519ph", 4, 2)) {
+      ByteBuffer secretKey = out(64);
+      ByteBuffer publicKey = out(32);
+      ByteBuffer digest = out(64);
+      ByteBuffer signature = out(64);
+
+      crypto_ed25519_key_pair(secretKey, publicKey, buf(t[0]));
+      assertArrayEquals(t[1], bytes(publicKey));
+      assertArrayEquals(bytes(publicKey), bytes(slice(secretKey, 32, 32)));
+
+      crypto_sha512(digest, buf(t[2]));
+      crypto_ed25519_ph_sign(signature, secretKey, digest);
+      assertArrayEquals(t[3], bytes(signature));
+
+      assertEquals(0, crypto_ed25519_ph_check(signature, publicKey, digest));
+      for (int i = 0; i < 64; i++) {
+        byte[] corrupt = bytes(signature);
+        corrupt[i] ^= 1;
+        assertEquals(-1, crypto_ed25519_ph_check(buf(corrupt), publicKey, digest));
+      }
     }
   }
 
