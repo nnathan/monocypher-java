@@ -8,6 +8,13 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+          <name>CC0-1.0</name>
+          <url>https://creativecommons.org/publicdomain/zero/1.0/legalcode</url>
+        </license>
+    </licenses>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>8</maven.compiler.release>
