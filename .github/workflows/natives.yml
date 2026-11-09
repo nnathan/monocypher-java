@@ -16,6 +16,8 @@ jobs:
           path: |
             build/native
             build/smoke
+            build/monocypher-java.jar
+            build/monocypher-android.aar
 
   smoke-linux:
     needs: build
@@ -54,5 +56,30 @@ jobs:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.arch }}
-      - run: java -cp build/smoke net.lastninja.monocypher.Monocypher "${{ github.workspace }}/build/native/${{ matrix.target }}/${{ matrix.lib }}"
+      - run: java -cp "build/smoke${{ runner.os == 'Windows' && ';' || ':' }}build/monocypher-java.jar" Smoke
         shell: bash
+
+  smoke-android:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives
+          path: build
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: default
+          script: scripts/smoke-android.sh

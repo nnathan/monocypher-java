@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Loads each Linux library in a real JVM of that platform. Run after
+# Loads each Linux library from the jar in a real JVM of that platform. Run after
 # scripts/docker-build.sh. Exits non-zero if any run fails, and lists any
 # platform this Docker host cannot emulate as skipped.
 set -uo pipefail
@@ -19,8 +19,7 @@ run() {
   fi
   echo "RUN  $label"
   if ! docker run --rm --platform "$platform" -v "$PWD/build:/build:ro" "$image" \
-    sh -c "$setup java -cp /build/smoke net.lastninja.monocypher.Monocypher \
-      /build/native/$target/libmonocypher_jni.so"; then
+    sh -c "$setup java -cp /build/smoke:/build/monocypher-java.jar Smoke"; then
     FAILED+=("$label")
   fi
 }
