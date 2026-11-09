@@ -69,26 +69,34 @@ public class Monocypher {
   public static native int crypto_aead_read(
       AEAD_ctx ctx, ByteBuffer plain_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer cipher_text);
 
-  public native void crypto_blake2b(byte[] hash, byte[] message);
+  public static native void crypto_blake2b(ByteBuffer hash, ByteBuffer message);
 
-  public native void crypto_blake2b_keyed(ByteBuffer hash, ByteBuffer key, ByteBuffer message);
+  public static native void crypto_blake2b_keyed(ByteBuffer hash, ByteBuffer key, ByteBuffer message);
 
-  @SuppressWarnings("unused")
-  public class Blake2b_ctx {
-    private long hash[] = new long[8];
-    private long input_offset[] = new long[2];
-    private long input[] = new long[16];
-    private long input_idx;
-    private long hash_size;
+  private static native int sizeof_blake2b_ctx();
+
+  public static final class Blake2b_ctx extends Ctx implements AutoCloseable {
+    public Blake2b_ctx() {
+      super(sizeof_blake2b_ctx());
+    }
+
+    @Override
+    public void close() {
+      crypto_wipe(this);
+    }
   }
 
-  public native void crypto_blake2b_init(Blake2b_ctx ctx, long hash_size);
+  public static native void crypto_blake2b_init(Blake2b_ctx ctx, int hash_size);
 
-  public native void crypto_blake2b_update(Blake2b_ctx ctx, byte[] message);
+  public static native void crypto_blake2b_keyed_init(
+      Blake2b_ctx ctx, int hash_size, ByteBuffer key);
 
-  public native void crypto_blake2b_final(Blake2b_ctx ctx, byte[] hash);
+  public static native void crypto_blake2b_update(Blake2b_ctx ctx, ByteBuffer message);
 
-  public native void crypto_wipe(Blake2b_ctx ctx);
+  /** Monocypher wipes ctx, so it must be initialised again before reuse. */
+  public static native void crypto_blake2b_final(Blake2b_ctx ctx, ByteBuffer hash);
+
+  public static native void crypto_wipe(Blake2b_ctx ctx);
 
   public enum crypto_argon2_algorithm {
     CRYPTO_ARGON2_D(0),

@@ -1,274 +1,149 @@
 #include "jni_util.h"
 
+/* No overlap checks: the manual allows hash, key and message to overlap. */
+
+static bool hash_arg(JNIEnv *env, jobject j_hash, mc_buf *hash) {
+  if (!mc_output(env, j_hash, "hash", hash)) return false;
+  if (hash->len < 1 || hash->len > 64) {
+    return mc_throw_iae(env, "hash", "must have between 1 and 64 bytes remaining");
+  }
+  return true;
+}
+
+static bool key_arg(JNIEnv *env, jobject j_key, mc_buf *key) {
+  if (!mc_input_opt(env, j_key, "key", key)) return false;
+  if (key->len > 64) return mc_throw_iae(env, "key", "must have at most 64 bytes remaining");
+  return true;
+}
+
+static bool hash_size_arg(JNIEnv *env, jint hash_size) {
+  if (hash_size < 1 || hash_size > 64) {
+    return mc_throw_iae(env, "hash_size", "must be between 1 and 64");
+  }
+  return true;
+}
+
 JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b(JNIEnv *env,
-                                                         jobject obj,
-                                                         jbyteArray hash,
-                                                         jbyteArray message) {
-  (void)obj;
+                                                         jclass cls,
+                                                         jobject j_hash,
+                                                         jobject j_message) {
+  (void)cls;
 
-  CHECK_NULL(hash, );
+  mc_buf hash, message;
+  if (!hash_arg(env, j_hash, &hash)) return;
+  if (!mc_input_opt(env, j_message, "message", &message)) return;
 
-  ENSURE_ARRAY_LENGTH_BETWEEN(hash, 1, 64, );
-
-  jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
-  jint hash_len = (*env)->GetArrayLength(env, hash);
-
-  jint msg_len = 0;
-  jbyte *msg_ptr = NULL;
-
-  if (message) {
-    msg_len = (*env)->GetArrayLength(env, message);
-    msg_ptr = (*env)->GetByteArrayElements(env, message, NULL);
-  }
-
-  crypto_blake2b((uint8_t *)hash_ptr, (size_t)hash_len,
-                 (const uint8_t *)msg_ptr, (size_t)msg_len);
-
-  (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
-  if (message) {
-    (*env)->ReleaseByteArrayElements(env, message, msg_ptr, JNI_ABORT);
-  }
+  crypto_blake2b(hash.ptr, hash.len, message.ptr, message.len);
 }
 
 JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed(
-    JNIEnv *env,
-    jobject obj,
-    jobject hash,
-    jobject key,
-    jobject message) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed(JNIEnv *env,
+                                                                jclass cls,
+                                                                jobject j_hash,
+                                                                jobject j_key,
+                                                                jobject j_message) {
+  (void)cls;
 
-  CHECK_NULL(hash, );
+  mc_buf hash, key, message;
+  if (!hash_arg(env, j_hash, &hash)) return;
+  if (!key_arg(env, j_key, &key)) return;
+  if (!mc_input_opt(env, j_message, "message", &message)) return;
 
-  INIT_BYTE_BUFFER_CLASS(bbClass);
-
-  ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, hash, );
-  if (key) {
-    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, hash, );
-  }
-  if (message) {
-    ENSURE_BYTE_BUFFER_IS_DIRECT(bbClass, message, );
-  }
-
-  ENSURE_BYTE_BUFFER_LENGTH_BETWEEN(bbClass, hash, 1, 64, );
-  if (key) {
-    ENSURE_BYTE_BUFFER_LENGTH_BETWEEN(bbClass, key, 0, 64, );
-  }
-
-  jbyte *hash_ptr = (*env)->GetDirectBufferAddress(env, hash);
-  jint hash_len = (*env)->CallIntMethod(env, hash, bbClass_remaining);
-
-  jbyte *key_ptr = NULL;
-  jint key_len = 0;
-
-  if (key) {
-    key_ptr = (*env)->GetDirectBufferAddress(env, key);
-    key_len = (*env)->CallIntMethod(env, key, bbClass_remaining);
-  }
-
-  jbyte *msg_ptr = NULL;
-  jint msg_len = 0;
-
-  if (message) {
-    msg_ptr = (*env)->GetDirectBufferAddress(env, message);
-    msg_len = (*env)->CallIntMethod(env, message, bbClass_remaining);
-  }
-
-  crypto_blake2b_keyed((uint8_t *)hash_ptr, (size_t)hash_len,
-                       (const uint8_t *)key_ptr, (size_t)key_len,
-                       (const uint8_t *)msg_ptr, (size_t)msg_len);
+  crypto_blake2b_keyed(hash.ptr, hash.len, key.ptr, key.len, message.ptr, message.len);
 }
 
-#define TO_BLAKE2_CTX_CLASS(c_ctx, java_ctx)                                 \
-  do {                                                                       \
-    jclass ctxClass = (*env)->GetObjectClass(env, java_ctx);                 \
-    {                                                                        \
-      jfieldID fidHash = (*env)->GetFieldID(env, ctxClass, "hash", "[J");    \
-      jlongArray hashArray =                                                 \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidHash);        \
-      (*env)->SetLongArrayRegion(env, hashArray, 0, 8,                       \
-                                 (const jlong *)c_ctx.hash);                 \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInputOffset =                                              \
-          (*env)->GetFieldID(env, ctxClass, "input_offset", "[J");           \
-      jlongArray inputOffsetArray =                                          \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidInputOffset); \
-      (*env)->SetLongArrayRegion(env, inputOffsetArray, 0, 2,                \
-                                 (const jlong *)c_ctx.input_offset);         \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInput = (*env)->GetFieldID(env, ctxClass, "input", "[J");  \
-      jlongArray inputArray =                                                \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidInput);       \
-      (*env)->SetLongArrayRegion(env, inputArray, 0, 16,                     \
-                                 (const jlong *)c_ctx.input);                \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInputIdx =                                                 \
-          (*env)->GetFieldID(env, ctxClass, "input_idx", "J");               \
-      (*env)->SetLongField(env, java_ctx, fidInputIdx,                       \
-                           (jlong)c_ctx.input_idx);                          \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidHashSize =                                                 \
-          (*env)->GetFieldID(env, ctxClass, "hash_size", "J");               \
-      (*env)->SetLongField(env, java_ctx, fidHashSize,                       \
-                           (jlong)c_ctx.hash_size);                          \
-    }                                                                        \
-  } while (0)
+JNIEXPORT jint JNICALL
+Java_net_lastninja_monocypher_Monocypher_sizeof_1blake2b_1ctx(JNIEnv *env, jclass cls) {
+  (void)env;
+  (void)cls;
+
+  return mc_ctx_alloc_size(sizeof(crypto_blake2b_ctx));
+}
 
 JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1init(
-    JNIEnv *env,
-    jobject obj,
-    jobject blake2b_ctx,
-    jlong hash_size) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1init(JNIEnv *env,
+                                                               jclass cls,
+                                                               jobject j_ctx,
+                                                               jint hash_size) {
+  (void)cls;
 
-  CHECK_NULL_WITH_NAME(blake2b_ctx, "ctx", );
+  crypto_blake2b_ctx *ctx;
+  if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
+  if (!hash_size_arg(env, hash_size)) return;
 
-  if (hash_size < 1 || hash_size > 64) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(
-        env, exc,
-        "hash_size must be a length between (inclusive) 1 and 64 bytes");
+  crypto_blake2b_init(ctx, (size_t)hash_size);
+  mc_ctx_mark(ctx, sizeof(*ctx), true);
+}
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed_1init(JNIEnv *env,
+                                                                      jclass cls,
+                                                                      jobject j_ctx,
+                                                                      jint hash_size,
+                                                                      jobject j_key) {
+  (void)cls;
+
+  crypto_blake2b_ctx *ctx;
+  mc_buf key;
+  if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
+  if (!hash_size_arg(env, hash_size)) return;
+  if (!key_arg(env, j_key, &key)) return;
+
+  crypto_blake2b_keyed_init(ctx, (size_t)hash_size, key.ptr, key.len);
+  mc_ctx_mark(ctx, sizeof(*ctx), true);
+}
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1update(JNIEnv *env,
+                                                                 jclass cls,
+                                                                 jobject j_ctx,
+                                                                 jobject j_message) {
+  (void)cls;
+
+  crypto_blake2b_ctx *ctx;
+  mc_buf message;
+  if (!mc_ctx_ready(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
+  if (!mc_input_opt(env, j_message, "message", &message)) return;
+
+  crypto_blake2b_update(ctx, message.ptr, message.len);
+}
+
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1final(JNIEnv *env,
+                                                                jclass cls,
+                                                                jobject j_ctx,
+                                                                jobject j_hash) {
+  (void)cls;
+
+  crypto_blake2b_ctx *ctx;
+  mc_buf hash;
+  if (!mc_ctx_ready(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
+  if (!mc_output(env, j_hash, "hash", &hash)) return;
+  if (hash.len != ctx->hash_size) {
+    mc_throw_iae(env, "hash", "must have exactly the hash_size given to init remaining");
     return;
   }
 
-  crypto_blake2b_ctx ctx;
-  crypto_blake2b_init(&ctx, hash_size);
-
-  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
-}
-
-#define FROM_BLAKE2_CTX_CLASS(java_ctx, c_ctx)                               \
-  do {                                                                       \
-    jclass ctxClass = (*env)->GetObjectClass(env, java_ctx);                 \
-    {                                                                        \
-      jfieldID fidHash = (*env)->GetFieldID(env, ctxClass, "hash", "[J");    \
-      jlongArray hashArray =                                                 \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidHash);        \
-      jlong *hash = (*env)->GetLongArrayElements(env, hashArray, NULL);      \
-      for (int i = 0; i < 8; i++) {                                          \
-        c_ctx.hash[i] = (uint64_t)hash[i];                                   \
-      }                                                                      \
-      (*env)->ReleaseLongArrayElements(env, hashArray, hash, 0);             \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInputOffset =                                              \
-          (*env)->GetFieldID(env, ctxClass, "input_offset", "[J");           \
-      jlongArray inputOffsetArray =                                          \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidInputOffset); \
-      jlong *input_offset =                                                  \
-          (*env)->GetLongArrayElements(env, inputOffsetArray, NULL);         \
-      for (int i = 0; i < 2; i++) {                                          \
-        c_ctx.input_offset[i] = (uint64_t)input_offset[i];                   \
-      }                                                                      \
-      (*env)->ReleaseLongArrayElements(env, inputOffsetArray, input_offset,  \
-                                       0);                                   \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInput = (*env)->GetFieldID(env, ctxClass, "input", "[J");  \
-      jlongArray inputArray =                                                \
-          (jlongArray)(*env)->GetObjectField(env, java_ctx, fidInput);       \
-      jlong *input = (*env)->GetLongArrayElements(env, inputArray, NULL);    \
-      for (int i = 0; i < 16; i++) {                                         \
-        c_ctx.input[i] = (uint64_t)input[i];                                 \
-      }                                                                      \
-      (*env)->ReleaseLongArrayElements(env, inputArray, input, 0);           \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidInputIdx =                                                 \
-          (*env)->GetFieldID(env, ctxClass, "input_idx", "J");               \
-      ctx.input_idx =                                                        \
-          (uint64_t)(*env)->GetLongField(env, java_ctx, fidInputIdx);        \
-    }                                                                        \
-    {                                                                        \
-      jfieldID fidHashSize =                                                 \
-          (*env)->GetFieldID(env, ctxClass, "hash_size", "J");               \
-      ctx.hash_size =                                                        \
-          (uint64_t)(*env)->GetLongField(env, java_ctx, fidHashSize);        \
-    }                                                                        \
-  } while (0)
-
-JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1update(
-    JNIEnv *env,
-    jobject obj,
-    jobject blake2b_ctx,
-    jbyteArray message) {
-  (void)obj;
-
-  CHECK_NULL_WITH_NAME(blake2b_ctx, "ctx", );
-
-  crypto_blake2b_ctx ctx;
-
-  jint msg_len = 0;
-  jbyte *msg_ptr = NULL;
-
-  if (message) {
-    msg_len = (*env)->GetArrayLength(env, message);
-    msg_ptr = (*env)->GetByteArrayElements(env, message, NULL);
-  }
-
-  FROM_BLAKE2_CTX_CLASS(blake2b_ctx, ctx);
-
-  crypto_blake2b_update(&ctx, (const uint8_t *)msg_ptr, (size_t)msg_len);
-
-  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
-}
-
-JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1final(
-    JNIEnv *env,
-    jobject obj,
-    jobject blake2b_ctx,
-    jbyteArray hash) {
-  (void)obj;
-
-  CHECK_NULL_WITH_NAME(blake2b_ctx, "ctx", );
-  CHECK_NULL(hash, );
-
-  crypto_blake2b_ctx ctx;
-
-  jint hash_len = (*env)->GetArrayLength(env, hash);
-
-  FROM_BLAKE2_CTX_CLASS(blake2b_ctx, ctx);
-
-  if ((size_t)hash_len != ctx.hash_size) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    char buf[64];
-    snprintf(buf, sizeof(buf), "hash must be of length %lu bytes",
-             ctx.hash_size);
-    (*env)->ThrowNew(env, exc, buf);
-    return;
-  }
-
-  jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
-
-  crypto_blake2b_final(&ctx, (uint8_t *)hash_ptr);
-
-  (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
-
-  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
+  /* Monocypher wipes the context, so it must be initialised again before reuse. */
+  crypto_blake2b_final(ctx, hash.ptr);
+  mc_ctx_mark(ctx, sizeof(*ctx), false);
 }
 
 JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Blake2b_1ctx_2(
     JNIEnv *env,
-    jobject obj,
-    jobject blake2b_ctx) {
-  (void)obj;
+    jclass cls,
+    jobject j_ctx) {
+  (void)cls;
 
-  if (!blake2b_ctx) {
+  if (j_ctx == NULL) {
     return;
   }
 
-  crypto_blake2b_ctx ctx;
-  crypto_wipe((void *)&ctx, sizeof(ctx));
+  crypto_blake2b_ctx *ctx;
+  if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
 
-  TO_BLAKE2_CTX_CLASS(ctx, blake2b_ctx);
+  crypto_wipe(ctx, sizeof(*ctx));
+  mc_ctx_mark(ctx, sizeof(*ctx), false);
 }

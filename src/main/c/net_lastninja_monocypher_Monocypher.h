@@ -124,10 +124,10 @@ JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1re
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_blake2b
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -135,31 +135,47 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b
  * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed
-  (JNIEnv *, jobject, jobject, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    sizeof_blake2b_ctx
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_sizeof_1blake2b_1ctx
+  (JNIEnv *, jclass);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_blake2b_init
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;J)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;I)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1init
-  (JNIEnv *, jobject, jobject, jlong);
+  (JNIEnv *, jclass, jobject, jint);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    crypto_blake2b_keyed_init
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;ILjava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1keyed_1init
+  (JNIEnv *, jclass, jobject, jint, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_blake2b_update
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1update
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_blake2b_final
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_1final
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -167,7 +183,7 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1blake2b_
  * Signature: (Lnet/lastninja/monocypher/Monocypher/Blake2b_ctx;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_Blake2b_1ctx_2
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jclass, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher

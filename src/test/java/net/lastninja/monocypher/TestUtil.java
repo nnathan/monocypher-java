@@ -112,4 +112,9 @@ public final class TestUtil {
     }
     return true;
   }
+
+  /** The number of bytes in the context struct itself, without alignment padding or state. */
+  public static int ctxStructSize(Object ctx) {
+    return ((Monocypher.Ctx) ctx).mem.capacity() - 8;
+  }
 }

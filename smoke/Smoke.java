@@ -13,13 +13,15 @@ public class Smoke {
   };
 
   public static void main(String[] args) {
-    Monocypher m = new Monocypher();
-
     byte[] expected = new byte[ABC_HASH.length];
     for (int i = 0; i < expected.length; i++) expected[i] = (byte) ABC_HASH[i];
 
+    ByteBuffer message = ByteBuffer.allocateDirect(3);
+    message.put(new byte[] {'a', 'b', 'c'}).flip();
+    ByteBuffer hashBuffer = ByteBuffer.allocateDirect(64);
+    Monocypher.crypto_blake2b(hashBuffer, message);
     byte[] hash = new byte[64];
-    m.crypto_blake2b(hash, new byte[] {'a', 'b', 'c'});
+    hashBuffer.get(hash);
     if (!Arrays.equals(hash, expected)) throw new AssertionError("blake2b mismatch");
 
     ByteBuffer a = ByteBuffer.allocateDirect(16);
