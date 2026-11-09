@@ -18,7 +18,8 @@ run() {
     return
   fi
   echo "RUN  $label"
-  if ! docker run --rm --platform "$platform" -v "$PWD/build:/build:ro" "$image" \
+  # Host networking: the 32-bit Debian container cannot resolve DNS on GitHub runners.
+  if ! docker run --rm --network host --platform "$platform" -v "$PWD/build:/build:ro" "$image" \
     sh -c "$setup java -cp /build/smoke net.lastninja.monocypher.Monocypher \
       /build/native/$target/libmonocypher_jni.so"; then
     FAILED+=("$label")

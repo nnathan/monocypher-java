@@ -41,8 +41,8 @@ jobs:
           - { os: windows-latest, target: windows-x86_64, lib: monocypher_jni.dll, distribution: temurin, java: "8", arch: x64 }
           - { os: windows-latest, target: windows-x86_64, lib: monocypher_jni.dll, distribution: temurin, java: "25", arch: x64 }
           - { os: windows-latest, target: windows-x86, lib: monocypher_jni.dll, distribution: temurin, java: "8", arch: x86 }
-          # Java 8 has no Windows arm64 build.
-          - { os: windows-11-arm, target: windows-arm64, lib: monocypher_jni.dll, distribution: temurin, java: "25", arch: aarch64 }
+          # Java 8 has no Windows arm64 build, and setup-java has no Temurin 25 for it yet.
+          - { os: windows-11-arm, target: windows-arm64, lib: monocypher_jni.dll, distribution: temurin, java: "21", arch: aarch64 }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/download-artifact@v4

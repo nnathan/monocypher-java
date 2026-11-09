@@ -24,6 +24,20 @@ zig_build() {
   rm -f "$OUT/$dir"/*.lib "$OUT/$dir"/*.pdb
 }
 
+# The JVM cannot find MinGW's @N-decorated stdcall exports on 32-bit Windows and
+# zig cc rejects --kill-at, so link twice: once to learn the decorated names,
+# then again with a .def file that also exports the plain ones.
+zig_build_stdcall() {
+  local dir=$1 lib=$2 def="$LOGS/$1.def"
+  zig_build "$@"
+  {
+    echo EXPORTS
+    grep -aoE 'Java_[A-Za-z0-9_]+@[0-9]+' "$OUT/$dir/$lib" | sort -u |
+      while read -r name; do echo "${name%@*}=$name"; done
+  } >"$def"
+  zig_build "$@" "$def"
+}
+
 # ndk_build <dir> <clang target>
 ndk_build() {
   local dir=$1 target=$2
@@ -80,7 +94,7 @@ job zig_build linux-arm64-musl  $SO unix aarch64-linux-musl
 job zig_build macos-x86_64 $DYLIB unix x86_64-macos.11.0
 job zig_build macos-arm64  $DYLIB unix aarch64-macos.11.0
 
-job zig_build windows-x86    $DLL windows x86-windows-gnu
+job zig_build_stdcall windows-x86 $DLL windows x86-windows-gnu
 job zig_build windows-x86_64 $DLL windows x86_64-windows-gnu
 job zig_build windows-arm64  $DLL windows aarch64-windows-gnu
 finish
