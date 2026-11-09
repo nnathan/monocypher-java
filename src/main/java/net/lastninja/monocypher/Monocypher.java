@@ -90,53 +90,81 @@ public class Monocypher {
 
   public native void crypto_wipe(Blake2b_ctx ctx);
 
-  @SuppressWarnings("unused")
-  public class Argon2_config {
-    public static final int Algorithm_ARGON2_D = 0;
-    public static final int Algorithm_ARGON2_I = 1;
-    public static final int Algorithm_ARGON2_DI = 2;
+  public enum crypto_argon2_algorithm {
+    CRYPTO_ARGON2_D(0),
+    CRYPTO_ARGON2_I(1),
+    CRYPTO_ARGON2_ID(2);
 
-    private int algorithm;
-    private int nb_blocks;
-    private int nb_passes;
-    private int nb_lanes;
+    final int value;
 
-    public Argon2_config(int algorithm, int nb_blocks, int nb_passes, int nb_lanes) {
-      this.algorithm = algorithm;
+    crypto_argon2_algorithm(int value) {
+      this.value = value;
+    }
+  }
+
+  public static final crypto_argon2_algorithm CRYPTO_ARGON2_D = crypto_argon2_algorithm.CRYPTO_ARGON2_D;
+  public static final crypto_argon2_algorithm CRYPTO_ARGON2_I = crypto_argon2_algorithm.CRYPTO_ARGON2_I;
+  public static final crypto_argon2_algorithm CRYPTO_ARGON2_ID = crypto_argon2_algorithm.CRYPTO_ARGON2_ID;
+
+  /** The largest nb_blocks whose work area fits in one ByteBuffer. */
+  private static final int ARGON2_MAX_BLOCKS = Integer.MAX_VALUE / 1024;
+
+  public static final class Argon2_config {
+    final int algorithm;
+    final int nb_blocks;
+    final int nb_passes;
+    final int nb_lanes;
+
+    public Argon2_config(
+        crypto_argon2_algorithm algorithm, int nb_blocks, int nb_passes, int nb_lanes) {
+      if (algorithm == null) throw new NullPointerException("algorithm cannot be null");
+      if (nb_passes < 1) throw new IllegalArgumentException("nb_passes must be at least 1");
+      if (nb_lanes < 1) throw new IllegalArgumentException("nb_lanes must be at least 1");
+      if (nb_blocks < 8L * nb_lanes) {
+        throw new IllegalArgumentException("nb_blocks must be at least 8 * nb_lanes");
+      }
+      if (nb_blocks > ARGON2_MAX_BLOCKS) {
+        throw new IllegalArgumentException("nb_blocks must be at most " + ARGON2_MAX_BLOCKS);
+      }
+
+      this.algorithm = algorithm.value;
       this.nb_blocks = nb_blocks;
       this.nb_passes = nb_passes;
       this.nb_lanes = nb_lanes;
     }
   }
 
-  @SuppressWarnings("unused")
-  public class Argon2_inputs {
-    private byte[] pass;
-    private byte[] salt;
+  public static final class Argon2_inputs {
+    final ByteBuffer pass;
+    final ByteBuffer salt;
 
-    public Argon2_inputs(byte[] pass, byte[] salt) {
+    /** A null pass is an empty password. */
+    public Argon2_inputs(ByteBuffer pass, ByteBuffer salt) {
       this.pass = pass;
       this.salt = salt;
     }
   }
 
-  @SuppressWarnings("unused")
-  public class Argon2_extras {
-    private byte[] key;
-    private byte[] ad;
+  public static final class Argon2_extras {
+    final ByteBuffer key;
+    final ByteBuffer ad;
 
-    public Argon2_extras(byte[] key, byte[] ad) {
+    /** Either may be null, meaning none. */
+    public Argon2_extras(ByteBuffer key, ByteBuffer ad) {
       this.key = key;
       this.ad = ad;
     }
   }
 
-  public native void crypto_argon2(
-      byte[] hash, Argon2_config config, Argon2_inputs inputs, Argon2_extras extras);
+  public static final Argon2_extras crypto_argon2_no_extras = new Argon2_extras(null, null);
 
-  public native void crypto_wipe(Argon2_inputs inputs);
-
-  public native void crypto_wipe(Argon2_extras extras);
+  /** work_area must be exactly nb_blocks * 1024 bytes and 8-byte aligned. Argon2 wipes it. */
+  public static native void crypto_argon2(
+      ByteBuffer hash,
+      ByteBuffer work_area,
+      Argon2_config config,
+      Argon2_inputs inputs,
+      Argon2_extras extras);
 
   public native void crypto_x25519_public_key(byte[] public_key, byte[] secret_key);
 

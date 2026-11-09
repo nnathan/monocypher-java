@@ -1,224 +1,105 @@
 #include "jni_util.h"
 
-#define FROM_ARGON2_CONFIG_CLASS(java_cfg, c_cfg)                     \
-  do {                                                                \
-    jclass cfgClass = (*env)->GetObjectClass(env, java_cfg);          \
-    {                                                                 \
-      jfieldID fidAlgorithm =                                         \
-          (*env)->GetFieldID(env, cfgClass, "algorithm", "I");        \
-      c_cfg.algorithm =                                               \
-          (uint32_t)(*env)->GetIntField(env, java_cfg, fidAlgorithm); \
-    }                                                                 \
-    {                                                                 \
-      jfieldID fidNbBlocks =                                          \
-          (*env)->GetFieldID(env, cfgClass, "nb_blocks", "I");        \
-      c_cfg.nb_blocks =                                               \
-          (uint32_t)(*env)->GetIntField(env, java_cfg, fidNbBlocks);  \
-    }                                                                 \
-    {                                                                 \
-      jfieldID fidNbPasses =                                          \
-          (*env)->GetFieldID(env, cfgClass, "nb_passes", "I");        \
-      c_cfg.nb_passes =                                               \
-          (uint32_t)(*env)->GetIntField(env, java_cfg, fidNbPasses);  \
-    }                                                                 \
-    {                                                                 \
-      jfieldID fidNbLanes =                                           \
-          (*env)->GetFieldID(env, cfgClass, "nb_lanes", "I");         \
-      c_cfg.nb_lanes =                                                \
-          (uint32_t)(*env)->GetIntField(env, java_cfg, fidNbLanes);   \
-    }                                                                 \
-  } while (0)
+static jobject buffer_field(JNIEnv *env, jobject obj, const char *name) {
+  jclass cls = (*env)->GetObjectClass(env, obj);
+  jfieldID field = (*env)->GetFieldID(env, cls, name, "Ljava/nio/ByteBuffer;");
+  return (*env)->GetObjectField(env, obj, field);
+}
+
+static jint int_field(JNIEnv *env, jobject obj, const char *name) {
+  jclass cls = (*env)->GetObjectClass(env, obj);
+  jfieldID field = (*env)->GetFieldID(env, cls, name, "I");
+  return (*env)->GetIntField(env, obj, field);
+}
+
+/* Argon2_config validates in its constructor; this repeats it as a backstop. */
+static bool get_config(JNIEnv *env, jobject j_config, crypto_argon2_config *cfg) {
+  jint algorithm = int_field(env, j_config, "algorithm");
+  jint nb_blocks = int_field(env, j_config, "nb_blocks");
+  jint nb_passes = int_field(env, j_config, "nb_passes");
+  jint nb_lanes = int_field(env, j_config, "nb_lanes");
+
+  if (algorithm != CRYPTO_ARGON2_D && algorithm != CRYPTO_ARGON2_I &&
+      algorithm != CRYPTO_ARGON2_ID) {
+    return mc_throw_iae(env, "algorithm", "is not a known Argon2 algorithm");
+  }
+  if (nb_passes < 1) return mc_throw_iae(env, "nb_passes", "must be at least 1");
+  if (nb_lanes < 1) return mc_throw_iae(env, "nb_lanes", "must be at least 1");
+  if ((int64_t)nb_blocks < 8 * (int64_t)nb_lanes) {
+    return mc_throw_iae(env, "nb_blocks", "must be at least 8 * nb_lanes");
+  }
+
+  cfg->algorithm = (uint32_t)algorithm;
+  cfg->nb_blocks = (uint32_t)nb_blocks;
+  cfg->nb_passes = (uint32_t)nb_passes;
+  cfg->nb_lanes = (uint32_t)nb_lanes;
+  return true;
+}
 
 JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1argon2(JNIEnv *env,
-                                                        jobject obj,
-                                                        jbyteArray hash,
-                                                        jobject config,
-                                                        jobject inputs,
-                                                        jobject extras) {
-  (void)obj;
+                                                        jclass cls,
+                                                        jobject j_hash,
+                                                        jobject j_work_area,
+                                                        jobject j_config,
+                                                        jobject j_inputs,
+                                                        jobject j_extras) {
+  (void)cls;
 
-  CHECK_NULL(hash, );
-  CHECK_NULL(config, );
-  CHECK_NULL(inputs, );
+  if (!mc_require_object(env, j_config, "config")) return;
+  if (!mc_require_object(env, j_inputs, "inputs")) return;
+  if (!mc_require_object(env, j_extras, "extras")) return;
 
-  crypto_argon2_config cfg;
+  crypto_argon2_config cfg = {0};
+  if (!get_config(env, j_config, &cfg)) return;
 
-  FROM_ARGON2_CONFIG_CLASS(config, cfg);
+  mc_buf hash, work_area, pass, salt, key, ad;
+  if (!mc_output(env, j_hash, "hash", &hash)) return;
+  if (!mc_output(env, j_work_area, "work_area", &work_area)) return;
+  if (!mc_input_opt(env, buffer_field(env, j_inputs, "pass"), "pass", &pass)) return;
+  if (!mc_input(env, buffer_field(env, j_inputs, "salt"), "salt", &salt)) return;
+  if (!mc_input_opt(env, buffer_field(env, j_extras, "key"), "key", &key)) return;
+  if (!mc_input_opt(env, buffer_field(env, j_extras, "ad"), "ad", &ad)) return;
 
-  if (cfg.algorithm != CRYPTO_ARGON2_D && cfg.algorithm != CRYPTO_ARGON2_I &&
-      cfg.algorithm != CRYPTO_ARGON2_ID) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(
-        env, exc,
-        "algorithm must be one of Argon2_config.Algorithm_ARGON2_{D,I,ID}");
+  if (salt.len < 8) {
+    mc_throw_iae(env, "salt", "must have at least 8 bytes remaining");
+    return;
+  }
+  /* uint64_t because nb_blocks * 1024 overflows 32 bits for large configs. */
+  if ((uint64_t)work_area.len != (uint64_t)cfg.nb_blocks * 1024) {
+    mc_throw_iae(env, "work_area", "must have exactly nb_blocks * 1024 bytes remaining");
+    return;
+  }
+  if ((uintptr_t)work_area.ptr % 8 != 0) {
+    mc_throw_iae(env, "work_area", "must be 8-byte aligned");
     return;
   }
 
-  if (cfg.nb_blocks < (8 * cfg.nb_lanes)) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "nb_blocks should be at least (8 * nb_lanes)");
+  if (!mc_check_disjoint(env, &hash, "hash", &work_area, "work_area") ||
+      !mc_check_disjoint(env, &hash, "hash", &pass, "pass") ||
+      !mc_check_disjoint(env, &hash, "hash", &salt, "salt") ||
+      !mc_check_disjoint(env, &hash, "hash", &key, "key") ||
+      !mc_check_disjoint(env, &hash, "hash", &ad, "ad") ||
+      !mc_check_disjoint(env, &work_area, "work_area", &pass, "pass") ||
+      !mc_check_disjoint(env, &work_area, "work_area", &salt, "salt") ||
+      !mc_check_disjoint(env, &work_area, "work_area", &key, "key") ||
+      !mc_check_disjoint(env, &work_area, "work_area", &ad, "ad")) {
     return;
   }
 
-  jclass inputClass = (*env)->GetObjectClass(env, inputs);
-  jfieldID fidPass = (*env)->GetFieldID(env, inputClass, "pass", "[B");
-  jfieldID fidSalt = (*env)->GetFieldID(env, inputClass, "salt", "[B");
-  jbyteArray pass = (jbyteArray)(*env)->GetObjectField(env, inputs, fidPass);
-  jbyteArray salt = (jbyteArray)(*env)->GetObjectField(env, inputs, fidSalt);
-
-  if (!salt) {
-    jclass npeClass = (*env)->FindClass(env, "java/lang/NullPointerException");
-    if (npeClass)
-      (*env)->ThrowNew(env, npeClass, "salt cannot be null");
-    return;
-  }
-
-  jint salt_len = (*env)->GetArrayLength(env, salt);
-
-  if (salt_len < 8) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "salt needs to be at least 8 bytes");
-    return;
-  }
-
-  jbyte *salt_ptr = (*env)->GetByteArrayElements(env, salt, NULL);
-
-  jbyte *pass_ptr = NULL;
-  jint pass_len = 0;
-
-  if (pass) {
-    pass_ptr = (*env)->GetByteArrayElements(env, pass, NULL);
-    pass_len = (*env)->GetArrayLength(env, pass);
-  }
-
-  crypto_argon2_inputs inp = {
-      .pass = (const uint8_t *)pass_ptr,
-      .pass_size = (uint32_t)pass_len,
-      .salt = (const uint8_t *)salt_ptr,
-      .salt_size = (uint32_t)salt_len,
+  crypto_argon2_inputs inputs = {
+      .pass = pass.ptr,
+      .salt = salt.ptr,
+      .pass_size = (uint32_t)pass.len,
+      .salt_size = (uint32_t)salt.len,
+  };
+  crypto_argon2_extras extras = {
+      .key = key.ptr,
+      .ad = ad.ptr,
+      .key_size = (uint32_t)key.len,
+      .ad_size = (uint32_t)ad.len,
   };
 
-  jclass extraClass = (*env)->GetObjectClass(env, extras);
-  jfieldID fidKey = (*env)->GetFieldID(env, extraClass, "key", "[B");
-  jfieldID fidAd = (*env)->GetFieldID(env, extraClass, "ad", "[B");
-  jbyteArray key = (jbyteArray)(*env)->GetObjectField(env, extras, fidKey);
-  jbyteArray ad = (jbyteArray)(*env)->GetObjectField(env, extras, fidAd);
-
-  jbyte *key_ptr = NULL;
-  jint key_len = 0;
-
-  if (key) {
-    key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
-    key_len = (*env)->GetArrayLength(env, key);
-  }
-
-  jbyte *ad_ptr = NULL;
-  jint ad_len = 0;
-
-  if (ad) {
-    ad_ptr = (*env)->GetByteArrayElements(env, ad, NULL);
-    ad_len = (*env)->GetArrayLength(env, ad);
-  }
-
-  crypto_argon2_extras ext = {
-      .key = (const uint8_t *)key_ptr,
-      .key_size = (uint32_t)key_len,
-      .ad = (const uint8_t *)ad_ptr,
-      .ad_size = (uint32_t)ad_len,
-  };
-
-  jbyte *hash_ptr = (*env)->GetByteArrayElements(env, hash, NULL);
-  jint hash_len = (*env)->GetArrayLength(env, hash);
-
-  jbyteArray work_area = (*env)->NewByteArray(env, cfg.nb_blocks * 1024);
-  jbyte *work_area_ptr = (*env)->GetByteArrayElements(env, work_area, NULL);
-
-  crypto_argon2((uint8_t *)hash_ptr, (size_t)hash_len, (void *)work_area_ptr,
-                cfg, inp, ext);
-
-  (*env)->ReleaseByteArrayElements(env, work_area, work_area_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, hash, hash_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, salt, salt_ptr, JNI_ABORT);
-  if (pass) {
-    (*env)->ReleaseByteArrayElements(env, pass, pass_ptr, JNI_ABORT);
-  }
-  if (key) {
-    (*env)->ReleaseByteArrayElements(env, key, key_ptr, JNI_ABORT);
-  }
-  if (ad) {
-    (*env)->ReleaseByteArrayElements(env, ad, ad_ptr, JNI_ABORT);
-  }
-}
-
-JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Argon2_1inputs_2(
-    JNIEnv *env,
-    jobject obj,
-    jobject inputs) {
-  (void)obj;
-
-  if (!inputs) {
-    return;
-  }
-
-  jclass inputClass = (*env)->GetObjectClass(env, inputs);
-  jfieldID fidPass = (*env)->GetFieldID(env, inputClass, "pass", "[B");
-  jfieldID fidSalt = (*env)->GetFieldID(env, inputClass, "salt", "[B");
-  jbyteArray pass = (jbyteArray)(*env)->GetObjectField(env, inputs, fidPass);
-  jbyteArray salt = (jbyteArray)(*env)->GetObjectField(env, inputs, fidSalt);
-
-  if (salt) {
-    jint salt_len = (*env)->GetArrayLength(env, salt);
-    jbyte *salt_ptr = (*env)->GetByteArrayElements(env, salt, NULL);
-
-    crypto_wipe((void *)salt_ptr, (size_t)salt_len);
-
-    (*env)->ReleaseByteArrayElements(env, salt, salt_ptr, 0);
-  }
-
-  if (pass) {
-    jint pass_len = (*env)->GetArrayLength(env, pass);
-    jbyte *pass_ptr = (*env)->GetByteArrayElements(env, pass, NULL);
-
-    crypto_wipe((void *)pass_ptr, (size_t)pass_len);
-
-    (*env)->ReleaseByteArrayElements(env, pass, pass_ptr, 0);
-  }
-}
-
-JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_00024Argon2_1extras_2(
-    JNIEnv *env,
-    jobject obj,
-    jobject extras) {
-  (void)obj;
-
-  if (!extras) {
-    return;
-  }
-
-  jclass extraClass = (*env)->GetObjectClass(env, extras);
-  jfieldID fidKey = (*env)->GetFieldID(env, extraClass, "key", "[B");
-  jfieldID fidAd = (*env)->GetFieldID(env, extraClass, "ad", "[B");
-  jbyteArray key = (jbyteArray)(*env)->GetObjectField(env, extras, fidKey);
-  jbyteArray ad = (jbyteArray)(*env)->GetObjectField(env, extras, fidAd);
-
-  if (key) {
-    jint key_len = (*env)->GetArrayLength(env, key);
-    jbyte *key_ptr = (*env)->GetByteArrayElements(env, key, NULL);
-
-    crypto_wipe((void *)key_ptr, (size_t)key_len);
-
-    (*env)->ReleaseByteArrayElements(env, key, key_ptr, 0);
-  }
-
-  if (ad) {
-    jint ad_len = (*env)->GetArrayLength(env, ad);
-    jbyte *ad_ptr = (*env)->GetByteArrayElements(env, ad, NULL);
-
-    crypto_wipe((void *)ad_ptr, (size_t)ad_len);
-
-    (*env)->ReleaseByteArrayElements(env, ad, ad_ptr, 0);
-  }
+  /* Monocypher wipes work_area itself before returning. */
+  crypto_argon2(hash.ptr, (uint32_t)hash.len, work_area.ptr, cfg, inputs, extras);
 }

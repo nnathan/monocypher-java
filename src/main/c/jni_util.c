@@ -55,6 +55,15 @@ bool mc_throw_iae(JNIEnv *env, const char *name, const char *problem) {
   return false;
 }
 
+bool mc_require_object(JNIEnv *env, jobject obj, const char *name) {
+  if (obj != NULL) return true;
+
+  char msg[128];
+  snprintf(msg, sizeof(msg), "%s cannot be null", name);
+  (*env)->ThrowNew(env, null_pointer, msg);
+  return false;
+}
+
 bool mc_input(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
   if (bb == NULL) {
     char msg[128];

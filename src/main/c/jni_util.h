@@ -26,6 +26,9 @@ typedef struct {
   size_t len;
 } mc_buf;
 
+/* Throws NullPointerException if obj is null. For non-buffer arguments. */
+bool mc_require_object(JNIEnv *env, jobject obj, const char *name);
+
 /*
  * Gets a required input from a direct ByteBuffer. Does not change the buffer's
  * position.
