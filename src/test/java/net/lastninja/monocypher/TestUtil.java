@@ -1,0 +1,85 @@
+package net.lastninja.monocypher;
+
+import java.nio.ByteBuffer;
+
+public final class TestUtil {
+  private TestUtil() {}
+
+  public static String toHex(ByteBuffer buffer) {
+    StringBuilder sb = new StringBuilder();
+    int pos = buffer.position();
+    int lim = buffer.limit();
+    for (int i = pos; i < lim; i++) {
+      sb.append(String.format("%02x", buffer.get(i)));
+    }
+    return sb.toString();
+  }
+
+  public static ByteBuffer fromHexToByteBuffer(String hex) {
+    int len = hex.length();
+    if (len % 2 != 0) {
+      throw new IllegalArgumentException("Hex string must have even length");
+    }
+
+    ByteBuffer buffer = ByteBuffer.allocateDirect(len / 2);
+    for (int i = 0; i < len; i += 2) {
+      byte b = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
+      buffer.put(b);
+    }
+
+    buffer.flip(); // Reset position to 0 for reading
+    return buffer;
+  }
+
+  public static byte[] fromHexToByteArray(String hex) {
+    int len = hex.length();
+    if (len % 2 != 0) {
+      throw new IllegalArgumentException("Hex string must have even length");
+    }
+
+    byte[] result = new byte[len / 2];
+    for (int i = 0; i < len; i += 2) {
+      result[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
+    }
+
+    return result;
+  }
+
+  public static long fromHexLEToLong(String hex) {
+    if (hex.length() != 16) {
+      throw new IllegalArgumentException("Hex string must be exactly 16 characters for 8 bytes");
+    }
+
+    long result = 0;
+    for (int i = 0; i < 8; i++) {
+      int byteIndex = i * 2;
+      int value = Integer.parseInt(hex.substring(byteIndex, byteIndex + 2), 16);
+      result |= ((long) value & 0xFF) << (8 * i); // little-endian shift
+    }
+
+    return result;
+  }
+
+  public static String toHex(byte[] buffer) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < buffer.length; i++) {
+      sb.append(String.format("%02x", buffer[i]));
+    }
+    return sb.toString();
+  }
+
+  public static int fromHexLEToInt(String hex) {
+    if (hex.length() != 8) {
+      throw new IllegalArgumentException("Hex string must be exactly 8 characters for 4 bytes");
+    }
+
+    int result = 0;
+    for (int i = 0; i < 4; i++) {
+      int byteIndex = i * 2;
+      int value = Integer.parseInt(hex.substring(byteIndex, byteIndex + 2), 16);
+      result |= (value & 0xFF) << (8 * i); // little-endian shift
+    }
+
+    return result;
+  }
+}

@@ -13,11 +13,12 @@ JNI_PLATFORM ?= $(HOST_OS)
 CFLAGS += -Wall
 CFLAGS += -Wextra
 CFLAGS += -fPIC
+CFLAGS += -Ivendor/monocypher/src -Isrc/main/c
 CFLAGS += -I"$(JAVA_HOME)/include"
 CFLAGS += -I"$(JAVA_HOME)/include/$(JNI_PLATFORM)" -O3
 LDFLAGS = -shared
 
-SRC = monocypher.c monocypher_jni.c
+SRC = vendor/monocypher/src/monocypher.c $(wildcard src/main/c/*.c)
 OUT = libmonocypher_jni.$(OUT_SUFFIX)
 
 all:

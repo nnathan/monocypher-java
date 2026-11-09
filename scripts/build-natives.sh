@@ -4,10 +4,10 @@
 # scripts/docker-build.sh so the toolchain versions stay pinned.
 set -euo pipefail
 
-SRC=(monocypher.c monocypher_jni.c)
+SRC=(vendor/monocypher/src/monocypher.c src/main/c/*.c)
 OUT=build/native
 LOGS=$(mktemp -d)
-CFLAGS=(-O3 -fPIC -shared -Wall -Wextra -I. -Ithird_party/jni)
+CFLAGS=(-O3 -fPIC -shared -Wall -Wextra -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni)
 ANDROID_API=21
 
 export ZIG_GLOBAL_CACHE_DIR="$PWD/build/.zig-cache"
