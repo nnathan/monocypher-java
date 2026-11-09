@@ -11,11 +11,9 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305(JNIEnv *env,
   (void)cls;
 
   mc_buf mac, message, key;
-  if (!mc_output(env, j_mac, "mac", &mac)) return;
+  if (!mc_output_len(env, j_mac, "mac", 16, &mac)) return;
   if (!mc_input_opt(env, j_message, "message", &message)) return;
-  if (!mc_input(env, j_key, "key", &key)) return;
-  if (!mc_require_len(env, &mac, "mac", 16)) return;
-  if (!mc_require_len(env, &key, "key", 32)) return;
+  if (!mc_input_len(env, j_key, "key", 32, &key)) return;
 
   crypto_poly1305(mac.ptr, message.ptr, message.len, key.ptr);
 }
@@ -38,8 +36,7 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1init(JNIEnv *env,
   crypto_poly1305_ctx *ctx;
   mc_buf key;
   if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
-  if (!mc_input(env, j_key, "key", &key)) return;
-  if (!mc_require_len(env, &key, "key", 32)) return;
+  if (!mc_input_len(env, j_key, "key", 32, &key)) return;
 
   crypto_poly1305_init(ctx, key.ptr);
   mc_ctx_mark(ctx, sizeof(*ctx), true);
@@ -70,8 +67,7 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1final(JNIEnv *env,
   crypto_poly1305_ctx *ctx;
   mc_buf mac;
   if (!mc_ctx_ready(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;
-  if (!mc_output(env, j_mac, "mac", &mac)) return;
-  if (!mc_require_len(env, &mac, "mac", 16)) return;
+  if (!mc_output_len(env, j_mac, "mac", 16, &mac)) return;
 
   crypto_poly1305_final(ctx, mac.ptr);
 
@@ -87,9 +83,7 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher
     jobject j_ctx) {
   (void)cls;
 
-  if (j_ctx == NULL) {
-    return;
-  }
+  if (j_ctx == NULL) return;
 
   crypto_poly1305_ctx *ctx;
   if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;

@@ -36,8 +36,7 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update && sudo apt-get install -y clang-tidy
-      # Reports only for now: the unconverted groups still have known warnings.
-      - run: clang-tidy -quiet src/main/c/*.c -- -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni -Ithird_party/jni/unix
+      - run: clang-tidy -quiet --warnings-as-errors='*' src/main/c/*.c -- -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni -Ithird_party/jni/unix
 
   smoke-linux:
     needs: build

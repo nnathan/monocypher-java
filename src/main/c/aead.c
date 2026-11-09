@@ -18,15 +18,13 @@ static bool text_args(JNIEnv *env,
                       const char *input_name,
                       aead_text *t) {
   if (!mc_output(env, j_output, output_name, &t->output)) return false;
-  if (mac_is_output) {
-    if (!mc_output(env, j_mac, "mac", &t->mac)) return false;
-  } else {
-    if (!mc_input(env, j_mac, "mac", &t->mac)) return false;
+  if (mac_is_output ? !mc_output_len(env, j_mac, "mac", 16, &t->mac)
+                    : !mc_input_len(env, j_mac, "mac", 16, &t->mac)) {
+    return false;
   }
   if (!mc_input_opt(env, j_ad, "ad", &t->ad)) return false;
   if (!mc_input(env, j_input, input_name, &t->input)) return false;
 
-  if (!mc_require_len(env, &t->mac, "mac", 16)) return false;
   if (!mc_require_same_len(env, &t->output, output_name, &t->input, input_name)) return false;
 
   return mc_check_overlap(env, &t->output, output_name, &t->input, input_name) &&
@@ -43,8 +41,8 @@ static bool key_nonce_args(JNIEnv *env,
                            size_t nonce_len,
                            mc_buf *key,
                            mc_buf *nonce) {
-  return mc_input(env, j_key, "key", key) && mc_input(env, j_nonce, "nonce", nonce) &&
-         mc_require_len(env, key, "key", 32) && mc_require_len(env, nonce, "nonce", nonce_len);
+  return mc_input_len(env, j_key, "key", 32, key) &&
+         mc_input_len(env, j_nonce, "nonce", nonce_len, nonce);
 }
 
 static bool key_nonce_disjoint(JNIEnv *env,
@@ -171,9 +169,7 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher
     jobject j_ctx) {
   (void)cls;
 
-  if (j_ctx == NULL) {
-    return;
-  }
+  if (j_ctx == NULL) return;
 
   crypto_aead_ctx *ctx;
   if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;

@@ -137,9 +137,7 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher
     jobject j_ctx) {
   (void)cls;
 
-  if (j_ctx == NULL) {
-    return;
-  }
+  if (j_ctx == NULL) return;
 
   crypto_blake2b_ctx *ctx;
   if (!mc_ctx_get(env, j_ctx, sizeof(*ctx), (void **)&ctx)) return;

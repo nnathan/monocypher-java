@@ -10,12 +10,9 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1chacha20_1h(JNIEnv *env,
 
   /* No overlap check: Monocypher's tests require arbitrary overlap to work here. */
   mc_buf out, key, in;
-  if (!mc_output(env, j_out, "out", &out)) return;
-  if (!mc_input(env, j_key, "key", &key)) return;
-  if (!mc_input(env, j_in, "in", &in)) return;
-  if (!mc_require_len(env, &out, "out", 32)) return;
-  if (!mc_require_len(env, &key, "key", 32)) return;
-  if (!mc_require_len(env, &in, "in", 16)) return;
+  if (!mc_output_len(env, j_out, "out", 32, &out)) return;
+  if (!mc_input_len(env, j_key, "key", 32, &key)) return;
+  if (!mc_input_len(env, j_in, "in", 16, &in)) return;
 
   crypto_chacha20_h(out.ptr, key.ptr, in.ptr);
 }
@@ -37,11 +34,8 @@ static bool get_stream_args(JNIEnv *env,
                             stream_args *a) {
   if (!mc_output(env, j_cipher_text, "cipher_text", &a->cipher_text)) return false;
   if (!mc_input_opt(env, j_plain_text, "plain_text", &a->plain_text)) return false;
-  if (!mc_input(env, j_key, "key", &a->key)) return false;
-  if (!mc_input(env, j_nonce, "nonce", &a->nonce)) return false;
-
-  if (!mc_require_len(env, &a->key, "key", 32)) return false;
-  if (!mc_require_len(env, &a->nonce, "nonce", nonce_len)) return false;
+  if (!mc_input_len(env, j_key, "key", 32, &a->key)) return false;
+  if (!mc_input_len(env, j_nonce, "nonce", nonce_len, &a->nonce)) return false;
   if (j_plain_text != NULL &&
       !mc_require_same_len(env, &a->plain_text, "plain_text", &a->cipher_text, "cipher_text")) {
     return false;

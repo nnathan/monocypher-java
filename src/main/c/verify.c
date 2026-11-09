@@ -1,8 +1,7 @@
 #include "jni_util.h"
 
 static bool verify_args(JNIEnv *env, jobject j_a, jobject j_b, size_t len, mc_buf *a, mc_buf *b) {
-  return mc_input(env, j_a, "a", a) && mc_input(env, j_b, "b", b) &&
-         mc_require_len(env, a, "a", len) && mc_require_len(env, b, "b", len);
+  return mc_input_len(env, j_a, "a", len, a) && mc_input_len(env, j_b, "b", len, b);
 }
 
 JNIEXPORT jint JNICALL
