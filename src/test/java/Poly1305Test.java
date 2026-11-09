@@ -1,8 +1,9 @@
 import static org.junit.jupiter.api.Assertions.*;
+import static net.lastninja.monocypher.Monocypher.*;
 import static net.lastninja.monocypher.TestUtil.*;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import net.lastninja.monocypher.Monocypher;
 import net.lastninja.monocypher.Monocypher.*;
 import org.junit.jupiter.api.*;
@@ -12,7 +13,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class Poly1305Test {
 
-  private final Monocypher mc = new Monocypher();
+  // c is left out: the tests treat it as unspecified.
+  private static void assertPoly1305Ctx(
+      Poly1305_ctx ctx, long c_idx, int[] r, int[] pad, int[] h) {
+    // c_idx is a size_t between c and the uint32_t fields: 80-byte struct on
+    // 64-bit platforms, 72 on 32-bit.
+    int sizeT = ctxStructSize(ctx) >= 80 ? 8 : 4;
+    ByteBuffer expected = ByteBuffer.allocate(sizeT + 13 * 4).order(ByteOrder.nativeOrder());
+    if (sizeT == 8) {
+      expected.putLong(c_idx);
+    } else {
+      expected.putInt((int) c_idx);
+    }
+    for (int v : r) expected.putInt(v);
+    for (int v : pad) expected.putInt(v);
+    for (int v : h) expected.putInt(v);
+    assertTrue(ctxContains(ctx, expected.array()), "ctx does not hold the expected state");
+  }
 
   @Test
   @Order(39)
@@ -21,10 +38,10 @@ public class Poly1305Test {
     {
       ByteBuffer message = fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f");
       ByteBuffer mac = message.duplicate();
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
-      mc.crypto_poly1305(mac, message, key);
+      crypto_poly1305(mac, message, key);
 
       String expected = "a2291a363def0b53845fa4126a6ad364";
 
@@ -37,10 +54,10 @@ public class Poly1305Test {
     {
       ByteBuffer message = null;
       ByteBuffer mac = ByteBuffer.allocateDirect(16);
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
-      mc.crypto_poly1305(mac, message, key);
+      crypto_poly1305(mac, message, key);
 
       String expected = "101112131415161718191a1b1c1d1e1f";
 
@@ -52,38 +69,23 @@ public class Poly1305Test {
 
   @Test
   @Order(40)
-  public void test_crypto_poly1305_init() throws NoSuchFieldException, IllegalAccessException {
+  public void test_crypto_poly1305_init() {
     // poly1305 init
     {
-      Poly1305_ctx ctx = mc.new Poly1305_ctx();
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      Poly1305_ctx ctx = new Poly1305_ctx();
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
-      mc.crypto_poly1305_init(ctx, key);
-
-      // c is uninitialised
-      // Field cField = Poly1305_ctx.class.getDeclaredField("c");
-      Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-      Field rField = Poly1305_ctx.class.getDeclaredField("r");
-      Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-      Field hField = Poly1305_ctx.class.getDeclaredField("h");
+      crypto_poly1305_init(ctx, key);
 
       // c is uninitialised
-      // cField.setAccessible(true);
-      c_idxField.setAccessible(true);
-      rField.setAccessible(true);
-      padField.setAccessible(true);
-      hField.setAccessible(true);
 
       // c is uninitialised
-      // byte[] c = (byte[]) cField.get(ctx);
-      long c_idx = (long) c_idxField.get(ctx);
-      int[] r = (int[]) rField.get(ctx);
-      int[] pad = (int[]) padField.get(ctx);
-      int[] h = (int[]) hField.get(ctx);
 
       // c is uninitialised
-      // byte[] c_expected = fromHexToByteArray("010000000000000040ec266f01000000");
+
+      // c is uninitialised
+      // ByteBuffer c_expected = fromHexToByteBuffer("010000000000000040ec266f01000000");
 
       long c_idx_expected = fromHexLEToLong("0000000000000000");
 
@@ -114,53 +116,35 @@ public class Poly1305Test {
 
       // c is uninitialised
       // assertArrayEquals(c_expected, c, "c mismatch");
-      assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-      assertArrayEquals(r_expected, r, "r mismatch");
-      assertArrayEquals(pad_expected, pad, "pad mismatch");
-      assertArrayEquals(h_expected, h, "h mismatch");
+      assertPoly1305Ctx(ctx, c_idx_expected, r_expected, pad_expected, h_expected);
     }
   }
 
   @Test
   @Order(41)
-  public void test_crypto_poly1305_update() throws NoSuchFieldException, IllegalAccessException {
+  public void test_crypto_poly1305_update() {
     // poly1305 update
     {
-      Poly1305_ctx ctx = mc.new Poly1305_ctx();
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
-      byte[] message =
-          fromHexToByteArray(
+      Poly1305_ctx ctx = new Poly1305_ctx();
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer message =
+          fromHexToByteBuffer(
               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122");
 
-      mc.crypto_poly1305_init(ctx, key);
+      crypto_poly1305_init(ctx, key);
 
-      mc.crypto_poly1305_update(ctx, message);
+      crypto_poly1305_update(ctx, message);
 
       {
         // c is not deterministic
-        // Field cField = Poly1305_ctx.class.getDeclaredField("c");
-        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-        Field rField = Poly1305_ctx.class.getDeclaredField("r");
-        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-        Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
         // c is not deterministic
-        // cField.setAccessible(true);
-        c_idxField.setAccessible(true);
-        rField.setAccessible(true);
-        padField.setAccessible(true);
-        hField.setAccessible(true);
 
         // c is not deterministic
-        // byte[] c = (byte[]) cField.get(ctx);
-        long c_idx = (long) c_idxField.get(ctx);
-        int[] r = (int[]) rField.get(ctx);
-        int[] pad = (int[]) padField.get(ctx);
-        int[] h = (int[]) hField.get(ctx);
 
         // c is not deterministic
-        // byte[] c_expected = fromHexToByteArray("2021224200000000445c7a9b01000000");
+        // ByteBuffer c_expected = fromHexToByteBuffer("2021224200000000445c7a9b01000000");
 
         long c_idx_expected = fromHexLEToLong("0300000000000000");
 
@@ -191,37 +175,19 @@ public class Poly1305Test {
 
         // c is not deterministic
         // assertArrayEquals(c_expected, c, "c mismatch");
-        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-        assertArrayEquals(r_expected, r, "r mismatch");
-        assertArrayEquals(pad_expected, pad, "pad mismatch");
-        assertArrayEquals(h_expected, h, "h mismatch");
+        assertPoly1305Ctx(ctx, c_idx_expected, r_expected, pad_expected, h_expected);
       }
 
-      mc.crypto_poly1305_update(ctx, null);
+      crypto_poly1305_update(ctx, null);
 
       {
-        Field cField = Poly1305_ctx.class.getDeclaredField("c");
-        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-        Field rField = Poly1305_ctx.class.getDeclaredField("r");
-        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-        Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
         // c is not deterministic
-        // cField.setAccessible(true);
-        c_idxField.setAccessible(true);
-        rField.setAccessible(true);
-        padField.setAccessible(true);
-        hField.setAccessible(true);
 
         // c is not deterministic
-        // byte[] c = (byte[]) cField.get(ctx);
-        long c_idx = (long) c_idxField.get(ctx);
-        int[] r = (int[]) rField.get(ctx);
-        int[] pad = (int[]) padField.get(ctx);
-        int[] h = (int[]) hField.get(ctx);
 
         // c is not deterministic
-        // byte[] c_expected = fromHexToByteArray("2021224200000000445c7a9b01000000");
+        // ByteBuffer c_expected = fromHexToByteBuffer("2021224200000000445c7a9b01000000");
 
         long c_idx_expected = fromHexLEToLong("0300000000000000");
 
@@ -252,37 +218,19 @@ public class Poly1305Test {
 
         // c is not deterministic
         // assertArrayEquals(c_expected, c, "c mismatch");
-        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-        assertArrayEquals(r_expected, r, "r mismatch");
-        assertArrayEquals(pad_expected, pad, "pad mismatch");
-        assertArrayEquals(h_expected, h, "h mismatch");
+        assertPoly1305Ctx(ctx, c_idx_expected, r_expected, pad_expected, h_expected);
       }
 
-      mc.crypto_poly1305_update(ctx, message);
+      crypto_poly1305_update(ctx, message);
 
       {
         // c is not deterministic
-        // Field cField = Poly1305_ctx.class.getDeclaredField("c");
-        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-        Field rField = Poly1305_ctx.class.getDeclaredField("r");
-        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-        Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
         // c is not deterministic
-        // cField.setAccessible(true);
-        c_idxField.setAccessible(true);
-        rField.setAccessible(true);
-        padField.setAccessible(true);
-        hField.setAccessible(true);
 
         // c is not deterministic
-        // byte[] c = (byte[]) cField.get(ctx);
-        long c_idx = (long) c_idxField.get(ctx);
-        int[] r = (int[]) rField.get(ctx);
-        int[] pad = (int[]) padField.get(ctx);
-        int[] h = (int[]) hField.get(ctx);
 
-        byte[] c_expected = fromHexToByteArray("1d1e1f202122030405060708090a0b0c");
+        ByteBuffer c_expected = fromHexToByteBuffer("1d1e1f202122030405060708090a0b0c");
 
         long c_idx_expected = fromHexLEToLong("0600000000000000");
 
@@ -313,32 +261,29 @@ public class Poly1305Test {
 
         // c is not deterministic
         // assertArrayEquals(c_expected, c, "c mismatch");
-        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-        assertArrayEquals(r_expected, r, "r mismatch");
-        assertArrayEquals(pad_expected, pad, "pad mismatch");
-        assertArrayEquals(h_expected, h, "h mismatch");
+        assertPoly1305Ctx(ctx, c_idx_expected, r_expected, pad_expected, h_expected);
       }
     }
   }
 
   @Test
   @Order(42)
-  public void test_crypto_poly1305_final() throws NoSuchFieldException, IllegalAccessException {
+  public void test_crypto_poly1305_final() {
     // poly1305 final
     {
-      Poly1305_ctx ctx = mc.new Poly1305_ctx();
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
-      byte[] message =
-          fromHexToByteArray(
+      Poly1305_ctx ctx = new Poly1305_ctx();
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer message =
+          fromHexToByteBuffer(
               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122");
-      byte[] mac = new byte[16];
+      ByteBuffer mac = ByteBuffer.allocateDirect(16);
 
-      mc.crypto_poly1305_init(ctx, key);
-      mc.crypto_poly1305_update(ctx, message);
-      mc.crypto_poly1305_update(ctx, null);
-      mc.crypto_poly1305_update(ctx, message);
-      mc.crypto_poly1305_final(ctx, mac);
+      crypto_poly1305_init(ctx, key);
+      crypto_poly1305_update(ctx, message);
+      crypto_poly1305_update(ctx, null);
+      crypto_poly1305_update(ctx, message);
+      crypto_poly1305_final(ctx, mac);
 
       String expected = "b133a3488588876cf36daebd4abf060e";
 
@@ -346,25 +291,10 @@ public class Poly1305Test {
 
       assertEquals(expected, actual, "mac mismatch");
 
-      Field cField = Poly1305_ctx.class.getDeclaredField("c");
-      Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-      Field rField = Poly1305_ctx.class.getDeclaredField("r");
-      Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-      Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
-      cField.setAccessible(true);
-      c_idxField.setAccessible(true);
-      rField.setAccessible(true);
-      padField.setAccessible(true);
-      hField.setAccessible(true);
 
-      byte[] c = (byte[]) cField.get(ctx);
-      long c_idx = (long) c_idxField.get(ctx);
-      int[] r = (int[]) rField.get(ctx);
-      int[] pad = (int[]) padField.get(ctx);
-      int[] h = (int[]) hField.get(ctx);
 
-      byte[] c_expected = fromHexToByteArray("00000000000000000000000000000000");
+      ByteBuffer c_expected = fromHexToByteBuffer("00000000000000000000000000000000");
 
       long c_idx_expected = fromHexLEToLong("0000000000000000");
 
@@ -393,48 +323,30 @@ public class Poly1305Test {
             fromHexLEToInt("00000000"),
           };
 
-      assertArrayEquals(c_expected, c, "c mismatch");
-      assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-      assertArrayEquals(r_expected, r, "r mismatch");
-      assertArrayEquals(pad_expected, pad, "pad mismatch");
-      assertArrayEquals(h_expected, h, "h mismatch");
+      // Every field, including c, is zero once wiped.
+      assertTrue(ctxIsZero(ctx), "ctx not wiped");
     }
   }
 
   @Test
   @Order(43)
-  public void test_crypto_wipe_poly1305_ctx() throws NoSuchFieldException, IllegalAccessException {
+  public void test_crypto_wipe_poly1305_ctx() {
     // crypto_wipe poly1305
     {
-      Poly1305_ctx ctx = mc.new Poly1305_ctx();
-      byte[] key =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      Poly1305_ctx ctx = new Poly1305_ctx();
+      ByteBuffer key =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
-      mc.crypto_poly1305_init(ctx, key);
+      crypto_poly1305_init(ctx, key);
       {
         // c is uninitialised
-        // Field cField = Poly1305_ctx.class.getDeclaredField("c");
-        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-        Field rField = Poly1305_ctx.class.getDeclaredField("r");
-        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-        Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
         // c is uninitialised
-        // cField.setAccessible(true);
-        c_idxField.setAccessible(true);
-        rField.setAccessible(true);
-        padField.setAccessible(true);
-        hField.setAccessible(true);
 
         // c is uninitialised
-        // byte[] c = (byte[]) cField.get(ctx);
-        long c_idx = (long) c_idxField.get(ctx);
-        int[] r = (int[]) rField.get(ctx);
-        int[] pad = (int[]) padField.get(ctx);
-        int[] h = (int[]) hField.get(ctx);
 
         // c is uninitialised
-        // byte[] c_expected = fromHexToByteArray("010000000000000040ec266f01000000");
+        // ByteBuffer c_expected = fromHexToByteBuffer("010000000000000040ec266f01000000");
 
         long c_idx_expected = fromHexLEToLong("0000000000000000");
 
@@ -465,34 +377,16 @@ public class Poly1305Test {
 
         // c is uninitialised
         // assertArrayEquals(c_expected, c, "c mismatch");
-        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-        assertArrayEquals(r_expected, r, "r mismatch");
-        assertArrayEquals(pad_expected, pad, "pad mismatch");
-        assertArrayEquals(h_expected, h, "h mismatch");
+        assertPoly1305Ctx(ctx, c_idx_expected, r_expected, pad_expected, h_expected);
       }
 
-      mc.crypto_wipe(ctx);
+      crypto_wipe(ctx);
 
       {
-        Field cField = Poly1305_ctx.class.getDeclaredField("c");
-        Field c_idxField = Poly1305_ctx.class.getDeclaredField("c_idx");
-        Field rField = Poly1305_ctx.class.getDeclaredField("r");
-        Field padField = Poly1305_ctx.class.getDeclaredField("pad");
-        Field hField = Poly1305_ctx.class.getDeclaredField("h");
 
-        cField.setAccessible(true);
-        c_idxField.setAccessible(true);
-        rField.setAccessible(true);
-        padField.setAccessible(true);
-        hField.setAccessible(true);
 
-        byte[] c = (byte[]) cField.get(ctx);
-        long c_idx = (long) c_idxField.get(ctx);
-        int[] r = (int[]) rField.get(ctx);
-        int[] pad = (int[]) padField.get(ctx);
-        int[] h = (int[]) hField.get(ctx);
 
-        byte[] c_expected = fromHexToByteArray("00000000000000000000000000000000");
+        ByteBuffer c_expected = fromHexToByteBuffer("00000000000000000000000000000000");
 
         long c_idx_expected = fromHexLEToLong("0000000000000000");
 
@@ -521,12 +415,108 @@ public class Poly1305Test {
               fromHexLEToInt("00000000"),
             };
 
-        assertArrayEquals(c_expected, c, "c mismatch");
-        assertEquals(c_idx_expected, c_idx, "c_idx mismatch");
-        assertArrayEquals(r_expected, r, "r mismatch");
-        assertArrayEquals(pad_expected, pad, "pad mismatch");
-        assertArrayEquals(h_expected, h, "h mismatch");
+        // Every field, including c, is zero once wiped.
+        assertTrue(ctxIsZero(ctx), "ctx not wiped");
       }
     }
+  }
+
+  private static ByteBuffer buf(int len) {
+    return ByteBuffer.allocateDirect(len);
+  }
+
+  private static IllegalArgumentException assertIae(org.junit.jupiter.api.function.Executable e) {
+    return assertThrows(IllegalArgumentException.class, e);
+  }
+
+  private static ByteBuffer counting(int len) {
+    ByteBuffer b = buf(len);
+    for (int i = 0; i < len; i++) b.put(i, (byte) i);
+    return b;
+  }
+
+  @Test
+  @Order(100)
+  public void test_streaming_matches_one_shot() {
+    ByteBuffer message = counting(100);
+    ByteBuffer key = counting(32);
+
+    ByteBuffer expected = buf(16);
+    crypto_poly1305(expected, message, key);
+
+    try (Poly1305_ctx ctx = new Poly1305_ctx()) {
+      crypto_poly1305_init(ctx, key);
+      for (int i = 0; i < 100; i += 30) {
+        ByteBuffer chunk = message.duplicate();
+        chunk.position(i).limit(Math.min(i + 30, 100));
+        crypto_poly1305_update(ctx, chunk);
+      }
+      ByteBuffer actual = buf(16);
+      crypto_poly1305_final(ctx, actual);
+      assertEquals(toHex(expected), toHex(actual));
+    }
+  }
+
+  @Test
+  @Order(101)
+  public void test_ctx_unusable_before_init_and_after_final() {
+    Poly1305_ctx ctx = new Poly1305_ctx();
+    assertThrows(IllegalStateException.class, () -> crypto_poly1305_update(ctx, buf(8)));
+
+    crypto_poly1305_init(ctx, buf(32));
+    crypto_poly1305_final(ctx, buf(16));
+
+    assertTrue(ctxIsZero(ctx), "ctx not wiped by final");
+    assertThrows(IllegalStateException.class, () -> crypto_poly1305_update(ctx, buf(8)));
+    assertThrows(IllegalStateException.class, () -> crypto_poly1305_final(ctx, buf(16)));
+  }
+
+  @Test
+  @Order(102)
+  public void test_rejects_bad_arguments() {
+    assertIae(() -> crypto_poly1305(buf(15), buf(8), buf(32)));
+    assertIae(() -> crypto_poly1305(buf(16), buf(8), buf(31)));
+    assertIae(() -> crypto_poly1305(buf(16).asReadOnlyBuffer(), buf(8), buf(32)));
+    assertIae(() -> crypto_poly1305(buf(16), buf(8), ByteBuffer.allocate(32)));
+    assertThrows(NullPointerException.class, () -> crypto_poly1305(buf(16), buf(8), null));
+    assertIae(() -> crypto_poly1305_init(new Poly1305_ctx(), buf(31)));
+    assertThrows(NullPointerException.class, () -> crypto_poly1305_init(null, buf(32)));
+
+    Poly1305_ctx ctx = new Poly1305_ctx();
+    crypto_poly1305_init(ctx, buf(32));
+    assertIae(() -> crypto_poly1305_final(ctx, buf(15)));
+  }
+
+  @Test
+  @Order(103)
+  public void test_mac_may_overlap_message_like_upstream() {
+    ByteBuffer shared = counting(128);
+    ByteBuffer message = shared.duplicate();
+    message.position(16).limit(112);
+
+    ByteBuffer expected = buf(16);
+    crypto_poly1305(expected, message.slice(), counting(32));
+
+    ByteBuffer mac = shared.duplicate();
+    mac.position(40).limit(56);
+    crypto_poly1305(mac.slice(), message.slice(), counting(32));
+    assertEquals(toHex(expected), toHex(mac.slice()));
+  }
+
+  @Test
+  @Order(104)
+  public void test_honours_position_and_leaves_it_alone() {
+    ByteBuffer message = counting(40);
+    message.position(8).limit(24);
+
+    ByteBuffer exact = buf(16);
+    for (int i = 0; i < 16; i++) exact.put(i, (byte) (i + 8));
+
+    ByteBuffer a = buf(16);
+    ByteBuffer b = buf(16);
+    crypto_poly1305(a, message, counting(32));
+    crypto_poly1305(b, exact, counting(32));
+    assertEquals(toHex(b), toHex(a));
+    assertEquals(8, message.position());
   }
 }

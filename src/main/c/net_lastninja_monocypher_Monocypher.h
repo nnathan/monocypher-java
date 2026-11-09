@@ -340,34 +340,42 @@ JNIEXPORT jlong JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1chacha2
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_poly1305
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305
-  (JNIEnv *, jobject, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    sizeof_poly1305_ctx
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_sizeof_1poly1305_1ctx
+  (JNIEnv *, jclass);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_poly1305_init
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1init
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_poly1305_update
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1update
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_poly1305_final
- * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305_1final
-  (JNIEnv *, jobject, jobject, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -375,7 +383,7 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1poly1305
  * Signature: (Lnet/lastninja/monocypher/Monocypher/Poly1305_ctx;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_Poly1305_1ctx_2
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jclass, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher

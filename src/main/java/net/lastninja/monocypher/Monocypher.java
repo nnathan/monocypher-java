@@ -215,23 +215,29 @@ public class Monocypher {
   public static native long crypto_chacha20_x(
       ByteBuffer cipher_text, ByteBuffer plain_text, ByteBuffer key, ByteBuffer nonce, long ctr);
 
-  public native void crypto_poly1305(ByteBuffer mac, ByteBuffer message, byte[] key);
+  public static native void crypto_poly1305(ByteBuffer mac, ByteBuffer message, ByteBuffer key);
 
-  public class Poly1305_ctx {
-    byte[] c = new byte[16];
-    long c_idx;
-    int[] r = new int[4];
-    int[] pad = new int[4];
-    int[] h = new int[5];
+  private static native int sizeof_poly1305_ctx();
+
+  public static final class Poly1305_ctx extends Ctx implements AutoCloseable {
+    public Poly1305_ctx() {
+      super(sizeof_poly1305_ctx());
+    }
+
+    @Override
+    public void close() {
+      crypto_wipe(this);
+    }
   }
 
-  public native void crypto_poly1305_init(Poly1305_ctx ctx, byte[] key);
+  public static native void crypto_poly1305_init(Poly1305_ctx ctx, ByteBuffer key);
 
-  public native void crypto_poly1305_update(Poly1305_ctx ctx, byte[] message);
+  public static native void crypto_poly1305_update(Poly1305_ctx ctx, ByteBuffer message);
 
-  public native void crypto_poly1305_final(Poly1305_ctx ctx, byte[] mac);
+  /** Wipes ctx, so it must be initialised again before reuse. */
+  public static native void crypto_poly1305_final(Poly1305_ctx ctx, ByteBuffer mac);
 
-  public native void crypto_wipe(Poly1305_ctx ctx);
+  public static native void crypto_wipe(Poly1305_ctx ctx);
 
   public native void crypto_elligator_key_pair(byte[] hidden, byte[] secret_key, byte[] seed);
 
