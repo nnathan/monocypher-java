@@ -50,42 +50,50 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lj
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_aead_lock
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;[BLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1lock
-  (JNIEnv *, jobject, jobject, jobject, jbyteArray, jobject, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_aead_unlock
- * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;[BLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1unlock
-  (JNIEnv *, jobject, jobject, jobject, jbyteArray, jobject, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jobject, jobject);
+
+/*
+ * Class:     net_lastninja_monocypher_Monocypher
+ * Method:    sizeof_aead_ctx
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_sizeof_1aead_1ctx
+  (JNIEnv *, jclass);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_aead_init_x
- * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1x
-  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_aead_init_djb
- * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1djb
-  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_aead_init_ietf
- * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;[B[B)V
+ * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1init_1ietf
-  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -93,7 +101,7 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1in
  * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Lnet_lastninja_monocypher_Monocypher_AEAD_1ctx_2
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jclass, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -101,7 +109,7 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Ln
  * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1write
-  (JNIEnv *, jobject, jobject, jobject, jobject, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -109,7 +117,7 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1wr
  * Signature: (Lnet/lastninja/monocypher/Monocypher/AEAD_ctx;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1aead_1read
-  (JNIEnv *, jobject, jobject, jobject, jobject, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher

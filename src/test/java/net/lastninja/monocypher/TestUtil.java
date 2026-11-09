@@ -1,3 +1,4 @@
+
 package net.lastninja.monocypher;
 
 import java.nio.ByteBuffer;
@@ -88,5 +89,27 @@ public final class TestUtil {
     buffer.put(bytes);
     buffer.flip();
     return buffer;
+  }
+
+  /** Whether a context's off-heap memory contains these exact bytes, wherever it was aligned. */
+  public static boolean ctxContains(Object ctx, byte[] expected) {
+    ByteBuffer mem = ((Monocypher.Ctx) ctx).mem;
+    for (int start = 0; start + expected.length <= mem.capacity(); start++) {
+      boolean match = true;
+      for (int i = 0; match && i < expected.length; i++) {
+        match = mem.get(start + i) == expected[i];
+      }
+      if (match) return true;
+    }
+    return false;
+  }
+
+  /** Whether every byte of a context's memory, including its state, is zero. */
+  public static boolean ctxIsZero(Object ctx) {
+    ByteBuffer mem = ((Monocypher.Ctx) ctx).mem;
+    for (int i = 0; i < mem.capacity(); i++) {
+      if (mem.get(i) != 0) return false;
+    }
+    return true;
   }
 }

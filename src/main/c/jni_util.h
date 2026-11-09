@@ -70,6 +70,31 @@ bool mc_check_overlap(JNIEnv *env, const mc_buf *a, const char *a_name,
 bool mc_check_disjoint(JNIEnv *env, const mc_buf *a, const char *a_name,
                        const mc_buf *b, const char *b_name);
 
+/*
+ * Contexts are Java Ctx objects holding one off-heap block, which C uses in
+ * place so that no copy of the secret state ever exists elsewhere. The block
+ * is a struct aligned to 8 bytes, followed by one byte recording whether it
+ * has been initialised.
+ */
+
+/* The number of bytes Java must allocate for a context struct of this size. */
+jint mc_ctx_alloc_size(size_t size);
+
+/*
+ * Gets the struct inside a Java Ctx, whatever its state. For init and wipe.
+ * Throws NullPointerException if j_ctx is null.
+ */
+bool mc_ctx_get(JNIEnv *env, jobject j_ctx, size_t size, void **ctx);
+
+/*
+ * Like mc_ctx_get, and also throws IllegalStateException unless the context
+ * has been initialised and not wiped since.
+ */
+bool mc_ctx_ready(JNIEnv *env, jobject j_ctx, size_t size, void **ctx);
+
+/* Records whether the context is usable. */
+void mc_ctx_mark(void *ctx, size_t size, bool ready);
+
 #define CHECK_NULL_WITH_NAME(var, name_str, ret_val)                 \
   do {                                                               \
     if (!(var)) {                                                    \

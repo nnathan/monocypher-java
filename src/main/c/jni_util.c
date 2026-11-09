@@ -4,6 +4,8 @@
 
 static jclass illegal_argument;
 static jclass null_pointer;
+static jclass illegal_state;
+static jfieldID ctx_mem;
 static jmethodID bb_is_direct;
 static jmethodID bb_is_read_only;
 static jmethodID bb_position;
@@ -23,8 +25,16 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
   illegal_argument = global_class(env, "java/lang/IllegalArgumentException");
   null_pointer = global_class(env, "java/lang/NullPointerException");
+  illegal_state = global_class(env, "java/lang/IllegalStateException");
   jclass bb = (*env)->FindClass(env, "java/nio/ByteBuffer");
-  if (illegal_argument == NULL || null_pointer == NULL || bb == NULL) return JNI_ERR;
+  jclass ctx = (*env)->FindClass(env, "net/lastninja/monocypher/Monocypher$Ctx");
+  if (illegal_argument == NULL || null_pointer == NULL || illegal_state == NULL || bb == NULL ||
+      ctx == NULL) {
+    return JNI_ERR;
+  }
+
+  ctx_mem = (*env)->GetFieldID(env, ctx, "mem", "Ljava/nio/ByteBuffer;");
+  if (ctx_mem == NULL) return JNI_ERR;
 
   bb_is_direct = (*env)->GetMethodID(env, bb, "isDirect", "()Z");
   bb_is_read_only = (*env)->GetMethodID(env, bb, "isReadOnly", "()Z");
@@ -128,4 +138,43 @@ bool mc_check_disjoint(JNIEnv *env, const mc_buf *a, const char *a_name,
   char problem[64];
   snprintf(problem, sizeof(problem), "must not overlap %s", b_name);
   return throw_iae(env, a_name, problem);
+}
+
+/* Up to 7 bytes to reach 8-byte alignment, and one state byte after the struct. */
+#define CTX_ALIGNMENT 8
+#define CTX_OVERHEAD CTX_ALIGNMENT
+#define CTX_READY 1
+
+jint mc_ctx_alloc_size(size_t size) {
+  return (jint)(size + CTX_OVERHEAD);
+}
+
+bool mc_ctx_get(JNIEnv *env, jobject j_ctx, size_t size, void **ctx) {
+  if (j_ctx == NULL) {
+    (*env)->ThrowNew(env, null_pointer, "ctx cannot be null");
+    return false;
+  }
+
+  jobject mem = (*env)->GetObjectField(env, j_ctx, ctx_mem);
+  uint8_t *base = (*env)->GetDirectBufferAddress(env, mem);
+  if (base == NULL || (*env)->GetDirectBufferCapacity(env, mem) != (jlong)mc_ctx_alloc_size(size)) {
+    return throw_iae(env, "ctx", "has invalid memory");
+  }
+
+  uintptr_t aligned = ((uintptr_t)base + (CTX_ALIGNMENT - 1)) & ~(uintptr_t)(CTX_ALIGNMENT - 1);
+  *ctx = base + (aligned - (uintptr_t)base);
+  return true;
+}
+
+bool mc_ctx_ready(JNIEnv *env, jobject j_ctx, size_t size, void **ctx) {
+  if (!mc_ctx_get(env, j_ctx, size, ctx)) return false;
+  if (((uint8_t *)*ctx)[size] != CTX_READY) {
+    (*env)->ThrowNew(env, illegal_state, "ctx is not initialised, or has been wiped");
+    return false;
+  }
+  return true;
+}
+
+void mc_ctx_mark(void *ctx, size_t size, bool ready) {
+  ((uint8_t *)ctx)[size] = ready ? CTX_READY : 0;
 }

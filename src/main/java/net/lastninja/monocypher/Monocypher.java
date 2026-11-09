@@ -17,41 +17,56 @@ public class Monocypher {
 
   public static native void crypto_wipe(ByteBuffer secret);
 
-  public native void crypto_aead_lock(
+  public static native void crypto_aead_lock(
       ByteBuffer cipher_text,
       ByteBuffer mac,
-      byte[] key,
+      ByteBuffer key,
       ByteBuffer nonce,
       ByteBuffer ad,
       ByteBuffer plain_text);
 
-  public native int crypto_aead_unlock(
+  public static native int crypto_aead_unlock(
       ByteBuffer plain_text,
       ByteBuffer mac,
-      byte[] key,
+      ByteBuffer key,
       ByteBuffer nonce,
       ByteBuffer ad,
       ByteBuffer cipher_text);
 
-  @SuppressWarnings("unused")
-  public class AEAD_ctx {
-    private long counter;
-    private byte[] key = new byte[32];
-    private byte[] nonce = new byte[8];
+  /** An off-heap context, used in place by C. Holds secrets until wiped or closed. */
+  abstract static class Ctx {
+    final ByteBuffer mem;
+
+    Ctx(int size) {
+      mem = ByteBuffer.allocateDirect(size);
+    }
   }
 
-  public native void crypto_aead_init_x(AEAD_ctx ctx, byte[] key, byte[] nonce);
+  private static native int sizeof_aead_ctx();
 
-  public native void crypto_aead_init_djb(AEAD_ctx ctx, byte[] key, byte[] nonce);
+  public static final class AEAD_ctx extends Ctx implements AutoCloseable {
+    public AEAD_ctx() {
+      super(sizeof_aead_ctx());
+    }
 
-  public native void crypto_aead_init_ietf(AEAD_ctx ctx, byte[] key, byte[] nonce);
+    @Override
+    public void close() {
+      crypto_wipe(this);
+    }
+  }
 
-  public native void crypto_wipe(AEAD_ctx ctx);
+  public static native void crypto_aead_init_x(AEAD_ctx ctx, ByteBuffer key, ByteBuffer nonce);
 
-  public native void crypto_aead_write(
+  public static native void crypto_aead_init_djb(AEAD_ctx ctx, ByteBuffer key, ByteBuffer nonce);
+
+  public static native void crypto_aead_init_ietf(AEAD_ctx ctx, ByteBuffer key, ByteBuffer nonce);
+
+  public static native void crypto_wipe(AEAD_ctx ctx);
+
+  public static native void crypto_aead_write(
       AEAD_ctx ctx, ByteBuffer cipher_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer plain_text);
 
-  public native int crypto_aead_read(
+  public static native int crypto_aead_read(
       AEAD_ctx ctx, ByteBuffer plain_text, ByteBuffer mac, ByteBuffer ad, ByteBuffer cipher_text);
 
   public native void crypto_blake2b(byte[] hash, byte[] message);
