@@ -1,0 +1,24 @@
+# Disabled checks, and why:
+#
+# clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+#   Flags snprintf and asks for the C11 Annex K snprintf_s instead, which glibc,
+#   musl and Apple's libc do not implement. snprintf is bounded by its size
+#   argument and always NUL terminates, and every call here passes sizeof of a
+#   local buffer. A truncated message is the worst outcome, and these buffers
+#   only ever hold exception messages.
+#
+# bugprone-easily-swappable-parameters
+#   Monocypher's own C API and the JNI signatures fix the order of arguments
+#   that share a type, so we cannot act on this.
+#
+# bugprone-macro-parentheses
+#   Only the TO_*_CTX_CLASS, FROM_*_CTX_CLASS and FROM_ARGON2_CONFIG_CLASS
+#   macros trigger it, and the off-heap context and Argon2 redesigns remove them.
+#   Re-enable it once they are gone.
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-macro-parentheses
