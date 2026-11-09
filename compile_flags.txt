@@ -1,0 +1,7 @@
+-xc
+-Wall
+-Wextra
+-Ivendor/monocypher/src
+-Isrc/main/c
+-Ithird_party/jni
+-Ithird_party/jni/unix
