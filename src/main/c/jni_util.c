@@ -71,13 +71,17 @@ bool mc_input(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
     (*env)->ThrowNew(env, null_pointer, msg);
     return false;
   }
-  if (!(*env)->CallBooleanMethod(env, bb, bb_is_direct)) {
+  jboolean direct = (*env)->CallBooleanMethod(env, bb, bb_is_direct);
+  if ((*env)->ExceptionCheck(env)) return false;
+  if (!direct) {
     return mc_throw_iae(env, name, "must be a direct ByteBuffer");
   }
 
   uint8_t *base = (*env)->GetDirectBufferAddress(env, bb);
   jint position = (*env)->CallIntMethod(env, bb, bb_position);
+  if ((*env)->ExceptionCheck(env)) return false;
   jint remaining = (*env)->CallIntMethod(env, bb, bb_remaining);
+  if ((*env)->ExceptionCheck(env)) return false;
   if (base == NULL && remaining > 0) {
     return mc_throw_iae(env, name, "has no accessible address");
   }
@@ -98,7 +102,9 @@ bool mc_input_opt(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
 
 bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
   if (!mc_input(env, bb, name, out)) return false;
-  if ((*env)->CallBooleanMethod(env, bb, bb_is_read_only)) {
+  jboolean read_only = (*env)->CallBooleanMethod(env, bb, bb_is_read_only);
+  if ((*env)->ExceptionCheck(env)) return false;
+  if (read_only) {
     return mc_throw_iae(env, name, "must not be read-only");
   }
   return true;
