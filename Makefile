@@ -13,6 +13,7 @@ JNI_PLATFORM ?= $(HOST_OS)
 CFLAGS += -Wall
 CFLAGS += -Wextra
 CFLAGS += -fPIC
+CFLAGS += -fvisibility=hidden
 CFLAGS += -Ivendor/monocypher/src -Isrc/main/c
 CFLAGS += -I"$(JAVA_HOME)/include"
 CFLAGS += -I"$(JAVA_HOME)/include/$(JNI_PLATFORM)" -O3

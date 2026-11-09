@@ -7,7 +7,7 @@ set -euo pipefail
 SRC=(vendor/monocypher/src/monocypher.c src/main/c/*.c)
 OUT=build/native
 LOGS=$(mktemp -d)
-CFLAGS=(-O3 -fPIC -shared -Wall -Wextra -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni)
+CFLAGS=(-O3 -fPIC -shared -fvisibility=hidden -Wall -Wextra -Ivendor/monocypher/src -Isrc/main/c -Ithird_party/jni)
 ANDROID_API=21
 
 export ZIG_GLOBAL_CACHE_DIR="$PWD/build/.zig-cache"
@@ -32,7 +32,7 @@ zig_build_stdcall() {
   zig_build "$@"
   {
     echo EXPORTS
-    grep -aoE 'Java_[A-Za-z0-9_]+@[0-9]+' "$OUT/$dir/$lib" | sort -u |
+    grep -aoE '(Java_[A-Za-z0-9_]+|JNI_OnLoad)@[0-9]+' "$OUT/$dir/$lib" | sort -u |
       while read -r name; do echo "${name%@*}=$name"; done
   } >"$def"
   zig_build "$@" "$def"

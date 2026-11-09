@@ -1,10 +1,8 @@
-import static org.junit.jupiter.api.Assertions.*;
+import static net.lastninja.monocypher.Monocypher.*;
 import static net.lastninja.monocypher.TestUtil.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-import net.lastninja.monocypher.Monocypher;
-import net.lastninja.monocypher.Monocypher.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -12,113 +10,98 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class VerifyTest {
 
-  private final Monocypher mc = new Monocypher();
+  private interface Verify {
+    int call(ByteBuffer a, ByteBuffer b);
+  }
+
+  private static byte[] counting(int len) {
+    byte[] bytes = new byte[len];
+    for (int i = 0; i < len; i++) bytes[i] = (byte) i;
+    return bytes;
+  }
+
+  private static void check(Verify verify, int len) {
+    assertEquals(0, verify.call(direct(counting(len)), direct(counting(len))));
+
+    byte[] different = counting(len);
+    different[8] = (byte) 0xff;
+    assertEquals(-1, verify.call(direct(counting(len)), direct(different)));
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> verify.call(ByteBuffer.allocateDirect(15), direct(counting(len))));
+    assertEquals("a must have exactly " + len + " bytes remaining", e.getMessage());
+
+    e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> verify.call(direct(counting(len)), ByteBuffer.allocateDirect(len + 1)));
+    assertEquals("b must have exactly " + len + " bytes remaining", e.getMessage());
+  }
 
   @Test
   @Order(1)
   public void test_crypto_verify16() {
-    {
-      byte[] a = new byte[16];
-      byte[] b = new byte[16];
-      for (int i = 0; i < 16; i++) a[i] = b[i] = (byte) i;
-
-      int result = mc.crypto_verify16(a, b);
-      assertEquals(0, result, "Equal arrays should return 0");
-    }
-
-    {
-      byte[] a = new byte[16];
-      byte[] b = new byte[16];
-      for (int i = 0; i < 16; i++) {
-        a[i] = (byte) i;
-        b[i] = (byte) (i == 8 ? 0xFF : i); // change one byte
-      }
-
-      int result = mc.crypto_verify16(a, b);
-      assertEquals(-1, result, "Different arrays should return -1");
-    }
-
-    {
-      byte[] a = new byte[15];
-      byte[] b = new byte[16];
-      try {
-        mc.crypto_verify16(a, b);
-        fail("Expected IllegalArgumentException was not thrown");
-      } catch (IllegalArgumentException e) {
-        assertEquals("Both arrays must be 16 bytes long", e.getMessage());
-      }
-    }
+    check((a, b) -> crypto_verify16(a, b), 16);
   }
 
   @Test
   @Order(2)
   public void test_crypto_verify32() {
-    {
-      byte[] a = new byte[32];
-      byte[] b = new byte[32];
-      for (int i = 0; i < 32; i++) a[i] = b[i] = (byte) i;
-
-      int result = mc.crypto_verify32(a, b);
-      assertEquals(0, result, "Equal arrays should return 0");
-    }
-
-    {
-      byte[] a = new byte[32];
-      byte[] b = new byte[32];
-      for (int i = 0; i < 32; i++) {
-        a[i] = (byte) i;
-        b[i] = (byte) (i == 8 ? 0xFF : i); // change one byte
-      }
-
-      int result = mc.crypto_verify32(a, b);
-      assertEquals(-1, result, "Different arrays should return -1");
-    }
-
-    {
-      byte[] a = new byte[15];
-      byte[] b = new byte[32];
-      try {
-        mc.crypto_verify32(a, b);
-        fail("Expected IllegalArgumentException was not thrown");
-      } catch (IllegalArgumentException e) {
-        assertEquals("Both arrays must be 32 bytes long", e.getMessage());
-      }
-    }
+    check((a, b) -> crypto_verify32(a, b), 32);
   }
 
   @Test
   @Order(3)
   public void test_crypto_verify64() {
-    {
-      byte[] a = new byte[64];
-      byte[] b = new byte[64];
-      for (int i = 0; i < 64; i++) a[i] = b[i] = (byte) i;
+    check((a, b) -> crypto_verify64(a, b), 64);
+  }
 
-      int result = mc.crypto_verify64(a, b);
-      assertEquals(0, result, "Equal arrays should return 0");
-    }
+  @Test
+  @Order(4)
+  public void test_crypto_verify_rejects_null_and_heap_buffers() {
+    ByteBuffer good = ByteBuffer.allocateDirect(16);
 
-    {
-      byte[] a = new byte[64];
-      byte[] b = new byte[64];
-      for (int i = 0; i < 64; i++) {
-        a[i] = (byte) i;
-        b[i] = (byte) (i == 8 ? 0xFF : i); // change one byte
-      }
+    NullPointerException npe =
+        assertThrows(NullPointerException.class, () -> crypto_verify16(null, good));
+    assertEquals("a cannot be null", npe.getMessage());
 
-      int result = mc.crypto_verify64(a, b);
-      assertEquals(-1, result, "Different arrays should return -1");
-    }
+    IllegalArgumentException iae =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> crypto_verify16(good, ByteBuffer.allocate(16)));
+    assertEquals("b must be a direct ByteBuffer", iae.getMessage());
+  }
 
-    {
-      byte[] a = new byte[15];
-      byte[] b = new byte[64];
-      try {
-        mc.crypto_verify64(a, b);
-        fail("Expected IllegalArgumentException was not thrown");
-      } catch (IllegalArgumentException e) {
-        assertEquals("Both arrays must be 64 bytes long", e.getMessage());
-      }
-    }
+  @Test
+  @Order(5)
+  public void test_crypto_verify_uses_position_and_limit() {
+    byte[] backing = new byte[32];
+    System.arraycopy(counting(16), 0, backing, 8, 16);
+    backing[0] = (byte) 0xff; // only outside the compared window
+
+    ByteBuffer a = direct(backing);
+    a.position(8).limit(24);
+    assertEquals(0, crypto_verify16(a, direct(counting(16))));
+  }
+
+  @Test
+  @Order(6)
+  public void test_crypto_verify_leaves_position_alone() {
+    ByteBuffer a = direct(counting(16));
+    ByteBuffer b = direct(counting(16));
+    crypto_verify16(a, b);
+    assertEquals(0, a.position());
+    assertEquals(0, b.position());
+  }
+
+  @Test
+  @Order(7)
+  public void test_crypto_verify_accepts_read_only_buffers() {
+    assertEquals(
+        0,
+        crypto_verify16(
+            direct(counting(16)).asReadOnlyBuffer(), direct(counting(16)).asReadOnlyBuffer()));
   }
 }

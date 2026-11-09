@@ -82,4 +82,11 @@ public final class TestUtil {
 
     return result;
   }
+
+  public static ByteBuffer direct(byte[] bytes) {
+    ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
+    buffer.put(bytes);
+    buffer.flip();
+    return buffer;
+  }
 }

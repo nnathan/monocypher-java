@@ -7,13 +7,15 @@ public class Monocypher {
     NativeLoader.load();
   }
 
-  public native int crypto_verify16(byte[] a, byte[] b);
+  public static native int crypto_verify16(ByteBuffer a, ByteBuffer b);
 
-  public native int crypto_verify32(byte[] a, byte[] b);
+  public static native int crypto_verify32(ByteBuffer a, ByteBuffer b);
 
-  public native int crypto_verify64(byte[] a, byte[] b);
+  public static native int crypto_verify64(ByteBuffer a, ByteBuffer b);
 
-  public native void crypto_wipe(byte[] buf);
+  public static native void crypto_wipe(byte[] secret);
+
+  public static native void crypto_wipe(ByteBuffer secret);
 
   public native void crypto_aead_lock(
       ByteBuffer cipher_text,

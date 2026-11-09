@@ -1,3 +1,4 @@
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import net.lastninja.monocypher.Monocypher;
 
@@ -21,11 +22,11 @@ public class Smoke {
     m.crypto_blake2b(hash, new byte[] {'a', 'b', 'c'});
     if (!Arrays.equals(hash, expected)) throw new AssertionError("blake2b mismatch");
 
-    byte[] a = new byte[16];
-    byte[] b = new byte[16];
-    if (m.crypto_verify16(a, b) != 0) throw new AssertionError("verify16 equal");
-    b[15] = 1;
-    if (m.crypto_verify16(a, b) != -1) throw new AssertionError("verify16 differ");
+    ByteBuffer a = ByteBuffer.allocateDirect(16);
+    ByteBuffer b = ByteBuffer.allocateDirect(16);
+    if (Monocypher.crypto_verify16(a, b) != 0) throw new AssertionError("verify16 equal");
+    b.put(15, (byte) 1);
+    if (Monocypher.crypto_verify16(a, b) != -1) throw new AssertionError("verify16 differ");
 
     System.out.println(
         "OK java "

@@ -7,6 +7,69 @@
 #include "monocypher.h"
 #include "net_lastninja_monocypher_Monocypher.h"
 
+/*
+ * Argument validation for JNI functions.
+ *
+ * Every function below returns true on success. On failure it leaves a Java
+ * exception pending and returns false, and the caller must return to Java
+ * immediately, because a pending exception does not stop C from running:
+ *
+ *   mc_buf key;
+ *   if (!mc_input(env, j_key, "key", &key)) return;
+ *
+ * `name` is the argument name used in exception messages.
+ */
+
+/* A view of a direct ByteBuffer's bytes, from its position to its limit. */
+typedef struct {
+  uint8_t *ptr;
+  size_t len;
+} mc_buf;
+
+/*
+ * Gets a required input from a direct ByteBuffer. Does not change the buffer's
+ * position.
+ *
+ * Throws NullPointerException if bb is null, and IllegalArgumentException if
+ * it is not direct.
+ */
+bool mc_input(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
+
+/*
+ * Like mc_input, for an optional input: a null bb succeeds and gives
+ * {NULL, 0}, which is how Monocypher expresses "no data".
+ */
+bool mc_input_opt(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
+
+/*
+ * Like mc_input, for a buffer that will be written to. Also throws
+ * IllegalArgumentException if bb is read-only, as C could otherwise write
+ * through a read-only view.
+ */
+bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
+
+/* Throws IllegalArgumentException unless b has exactly len bytes. */
+bool mc_require_len(JNIEnv *env, const mc_buf *b, const char *name, size_t len);
+
+/* Throws IllegalArgumentException unless a and b have the same length. */
+bool mc_require_same_len(JNIEnv *env, const mc_buf *a, const char *a_name,
+                         const mc_buf *b, const char *b_name);
+
+/*
+ * For arguments that may be used in place, such as cipher_text and plain_text.
+ * Allows exactly the same memory (same start and length) or no overlap, and
+ * throws IllegalArgumentException for a partial overlap.
+ */
+bool mc_check_overlap(JNIEnv *env, const mc_buf *a, const char *a_name,
+                      const mc_buf *b, const char *b_name);
+
+/*
+ * For arguments that must never share memory, such as mac and cipher_text.
+ * Throws IllegalArgumentException for any overlap, including exact aliases.
+ */
+bool mc_check_disjoint(JNIEnv *env, const mc_buf *a, const char *a_name,
+                       const mc_buf *b, const char *b_name);
+
 #define CHECK_NULL_WITH_NAME(var, name_str, ret_val)                 \
   do {                                                               \
     if (!(var)) {                                                    \

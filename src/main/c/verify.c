@@ -1,101 +1,45 @@
 #include "jni_util.h"
 
+static bool verify_args(JNIEnv *env, jobject j_a, jobject j_b, size_t len, mc_buf *a, mc_buf *b) {
+  return mc_input(env, j_a, "a", a) && mc_input(env, j_b, "b", b) &&
+         mc_require_len(env, a, "a", len) && mc_require_len(env, b, "b", len);
+}
+
 JNIEXPORT jint JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1verify16(JNIEnv *env,
-                                                          jobject obj,
-                                                          jbyteArray j_a,
-                                                          jbyteArray j_b) {
-  (void)obj;
+                                                          jclass cls,
+                                                          jobject j_a,
+                                                          jobject j_b) {
+  (void)cls;
 
-  CHECK_NULL_WITH_NAME(j_a, "a", -1);
-  CHECK_NULL_WITH_NAME(j_b, "b", -1);
+  mc_buf a, b;
+  if (!verify_args(env, j_a, j_b, 16, &a, &b)) return -1;
 
-  if ((*env)->GetArrayLength(env, j_a) != 16 ||
-      (*env)->GetArrayLength(env, j_b) != 16) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    (*env)->ThrowNew(env, exc, "Both arrays must be 16 bytes long");
-    return -1;
-  }
-
-  jbyte *a = (*env)->GetByteArrayElements(env, j_a, NULL);
-  jbyte *b = (*env)->GetByteArrayElements(env, j_b, NULL);
-
-  // Monocypher expects const uint8_t*, so cast
-  int result = crypto_verify16((const uint8_t *)a, (const uint8_t *)b);
-
-  (*env)->ReleaseByteArrayElements(env, j_a, a,
-                                   JNI_ABORT);  // no write-back needed
-  (*env)->ReleaseByteArrayElements(env, j_b, b, JNI_ABORT);
-
-  return result;
+  return crypto_verify16(a.ptr, b.ptr);
 }
 
 JNIEXPORT jint JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1verify32(JNIEnv *env,
-                                                          jobject obj,
-                                                          jbyteArray j_a,
-                                                          jbyteArray j_b) {
-  (void)obj;
+                                                          jclass cls,
+                                                          jobject j_a,
+                                                          jobject j_b) {
+  (void)cls;
 
-  CHECK_NULL_WITH_NAME(j_a, "a", -1);
-  CHECK_NULL_WITH_NAME(j_b, "b", -1);
+  mc_buf a, b;
+  if (!verify_args(env, j_a, j_b, 32, &a, &b)) return -1;
 
-  if ((*env)->GetArrayLength(env, j_a) != 32 ||
-      (*env)->GetArrayLength(env, j_b) != 32) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    if (exc != NULL) {
-      (*env)->ThrowNew(env, exc, "Both arrays must be 32 bytes long");
-    } else {
-      // should be unreachable
-      return -1;
-    }
-    return 0;
-  }
-
-  jbyte *a = (*env)->GetByteArrayElements(env, j_a, NULL);
-  jbyte *b = (*env)->GetByteArrayElements(env, j_b, NULL);
-
-  // Monocypher expects const uint8_t*, so cast
-  int result = crypto_verify32((const uint8_t *)a, (const uint8_t *)b);
-
-  (*env)->ReleaseByteArrayElements(env, j_a, a,
-                                   JNI_ABORT);  // no write-back needed
-  (*env)->ReleaseByteArrayElements(env, j_b, b, JNI_ABORT);
-
-  return result;
+  return crypto_verify32(a.ptr, b.ptr);
 }
 
 JNIEXPORT jint JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1verify64(JNIEnv *env,
-                                                          jobject obj,
-                                                          jbyteArray j_a,
-                                                          jbyteArray j_b) {
-  (void)obj;
+                                                          jclass cls,
+                                                          jobject j_a,
+                                                          jobject j_b) {
+  (void)cls;
 
-  CHECK_NULL_WITH_NAME(j_a, "a", -1);
-  CHECK_NULL_WITH_NAME(j_b, "b", -1);
+  mc_buf a, b;
+  if (!verify_args(env, j_a, j_b, 64, &a, &b)) return -1;
 
-  if ((*env)->GetArrayLength(env, j_a) != 64 ||
-      (*env)->GetArrayLength(env, j_b) != 64) {
-    jclass exc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    if (exc != NULL) {
-      (*env)->ThrowNew(env, exc, "Both arrays must be 64 bytes long");
-    } else {
-      // should be unreachable
-      return -1;
-    }
-    return 0;
-  }
-
-  jbyte *a = (*env)->GetByteArrayElements(env, j_a, NULL);
-  jbyte *b = (*env)->GetByteArrayElements(env, j_b, NULL);
-
-  // Monocypher expects const uint8_t*, so cast
-  int result = crypto_verify64((const uint8_t *)a, (const uint8_t *)b);
-
-  (*env)->ReleaseByteArrayElements(env, j_a, a,
-                                   JNI_ABORT);  // no write-back needed
-  (*env)->ReleaseByteArrayElements(env, j_b, b, JNI_ABORT);
-
-  return result;
+  return crypto_verify64(a.ptr, b.ptr);
 }

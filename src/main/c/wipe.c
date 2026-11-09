@@ -2,9 +2,9 @@
 
 JNIEXPORT void JNICALL
 Java_net_lastninja_monocypher_Monocypher_crypto_1wipe___3B(JNIEnv *env,
-                                                           jobject obj,
+                                                           jclass cls,
                                                            jbyteArray buf) {
-  (void)obj;
+  (void)cls;
 
   if (buf == NULL) {
     return;
@@ -19,6 +19,20 @@ Java_net_lastninja_monocypher_Monocypher_crypto_1wipe___3B(JNIEnv *env,
   crypto_wipe((void *)ptr, (size_t)len);
 
   (*env)->ReleaseByteArrayElements(env, buf, ptr, 0);
+}
 
-  return;
+JNIEXPORT void JNICALL
+Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Ljava_nio_ByteBuffer_2(JNIEnv *env,
+                                                                              jclass cls,
+                                                                              jobject j_secret) {
+  (void)cls;
+
+  if (j_secret == NULL) {
+    return;
+  }
+
+  mc_buf secret;
+  if (!mc_output(env, j_secret, "secret", &secret)) return;
+
+  crypto_wipe(secret.ptr, secret.len);
 }
