@@ -174,35 +174,32 @@ public class Monocypher {
       Argon2_inputs inputs,
       Argon2_extras extras);
 
-  public native void crypto_x25519_public_key(byte[] public_key, byte[] secret_key);
+  public static native void crypto_x25519_public_key(ByteBuffer public_key, ByteBuffer secret_key);
 
-  public native void crypto_x25519(
-      byte[] raw_shared_secret, byte[] your_secret_key, byte[] their_public_key);
+  public static native void crypto_x25519(
+      ByteBuffer raw_shared_secret, ByteBuffer your_secret_key, ByteBuffer their_public_key);
 
-  public native void crypto_x25519_to_eddsa(byte[] eddsa, byte[] x25519);
+  public static native void crypto_x25519_to_eddsa(ByteBuffer eddsa, ByteBuffer x25519);
 
-  public native void crypto_x25519_inverse(
-      byte[] blind_salt, byte[] private_key, byte[] curve_point);
+  public static native void crypto_x25519_inverse(
+      ByteBuffer blind_salt, ByteBuffer private_key, ByteBuffer curve_point);
 
-  public native void crypto_x25519_dirty_small(byte[] pk, byte[] sk);
+  public static native void crypto_x25519_dirty_small(ByteBuffer pk, ByteBuffer sk);
 
-  public native void crypto_x25519_dirty_fast(byte[] pk, byte[] sk);
+  public static native void crypto_x25519_dirty_fast(ByteBuffer pk, ByteBuffer sk);
 
-  public native void crypto_eddsa_key_pair(byte[] secret_key, byte[] public_key, byte[] seed);
+  /** Monocypher wipes the seed, so it must be writable. */
+  public static native void crypto_eddsa_key_pair(
+      ByteBuffer secret_key, ByteBuffer public_key, ByteBuffer seed);
 
-  public native void crypto_eddsa_sign(byte[] signature, byte[] secret_key, byte[] message);
+  public static native void crypto_eddsa_sign(
+      ByteBuffer signature, ByteBuffer secret_key, ByteBuffer message);
 
-  public native int crypto_eddsa_check(byte[] signature, byte[] public_key, byte[] message);
+  /** Returns 0 if the signature is valid, -1 otherwise. */
+  public static native int crypto_eddsa_check(
+      ByteBuffer signature, ByteBuffer public_key, ByteBuffer message);
 
-  public native void crypto_eddsa_to_x25519(byte[] x25519, byte[] eddsa);
-
-  public native void crypto_eddsa_trim_scalar(byte[] out, byte[] in);
-
-  public native void crypto_eddsa_reduce(byte[] reduced, byte[] expanded);
-
-  public native void crypto_eddsa_mul_add(byte r[], byte[] a, byte[] b, byte[] c);
-
-  public native void crypto_eddsa_scalarbase(byte[] point, byte[] scalar);
+  public static native void crypto_eddsa_to_x25519(ByteBuffer x25519, ByteBuffer eddsa);
 
   public static native void crypto_chacha20_h(ByteBuffer out, ByteBuffer key, ByteBuffer in);
 
@@ -239,9 +236,12 @@ public class Monocypher {
 
   public static native void crypto_wipe(Poly1305_ctx ctx);
 
-  public native void crypto_elligator_key_pair(byte[] hidden, byte[] secret_key, byte[] seed);
+  /** Monocypher wipes the seed, so it must be writable. */
+  public static native void crypto_elligator_key_pair(
+      ByteBuffer hidden, ByteBuffer secret_key, ByteBuffer seed);
 
-  public native int crypto_elligator_rev(byte[] hidden, byte[] curve, byte tweak);
+  /** tweak must be between 0 and 255. Returns 0 on success, -1 if curve cannot be hidden. */
+  public static native int crypto_elligator_rev(ByteBuffer hidden, ByteBuffer curve, int tweak);
 
-  public native void crypto_elligator_map(byte[] curve, byte[] hidden);
+  public static native void crypto_elligator_map(ByteBuffer curve, ByteBuffer hidden);
 }

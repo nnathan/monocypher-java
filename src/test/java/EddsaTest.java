@@ -1,7 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
+import static net.lastninja.monocypher.Monocypher.*;
 import static net.lastninja.monocypher.TestUtil.*;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import net.lastninja.monocypher.Monocypher;
 import net.lastninja.monocypher.Monocypher.*;
@@ -12,19 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class EddsaTest {
 
-  private final Monocypher mc = new Monocypher();
-
   @Test
   @Order(27)
   public void test_crypto_eddsa_key_pair() {
     // crypto_eddsa_key_pair happy path
     {
-      byte[] secret_key = new byte[64];
-      byte[] public_key = new byte[32];
-      byte[] seed =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+      ByteBuffer secret_key = ByteBuffer.allocateDirect(64);
+      ByteBuffer public_key = ByteBuffer.allocateDirect(32);
+      ByteBuffer seed =
+          fromHexToByteBuffer("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
-      mc.crypto_eddsa_key_pair(secret_key, public_key, seed);
+      crypto_eddsa_key_pair(secret_key, public_key, seed);
 
       String expected, actual;
 
@@ -52,14 +50,14 @@ public class EddsaTest {
   public void test_crypto_eddsa_sign() {
     // crypto_eddsa_sign happy path
     {
-      byte[] secret_key =
-          fromHexToByteArray(
+      ByteBuffer secret_key =
+          fromHexToByteBuffer(
               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
                   + "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
-      byte[] signature = new byte[64];
-      byte[] message = null;
+      ByteBuffer signature = ByteBuffer.allocateDirect(64);
+      ByteBuffer message = null;
 
-      mc.crypto_eddsa_sign(signature, secret_key, message);
+      crypto_eddsa_sign(signature, secret_key, message);
 
       String expected, actual;
 
@@ -73,14 +71,14 @@ public class EddsaTest {
 
     // crypto_eddsa_sign happy path
     {
-      byte[] secret_key =
-          fromHexToByteArray(
+      ByteBuffer secret_key =
+          fromHexToByteBuffer(
               "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
                   + "f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
-      byte[] signature = new byte[64];
-      byte[] message = fromHexToByteArray("0001020304050607");
+      ByteBuffer signature = ByteBuffer.allocateDirect(64);
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
 
-      mc.crypto_eddsa_sign(signature, secret_key, message);
+      crypto_eddsa_sign(signature, secret_key, message);
 
       String expected, actual;
 
@@ -98,16 +96,16 @@ public class EddsaTest {
   public void test_crypto_eddsa_check() {
     // crypto_eddsa_check happy path
     {
-      byte[] public_key =
-          fromHexToByteArray("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
-      byte[] signature =
-          fromHexToByteArray(
+      ByteBuffer public_key =
+          fromHexToByteBuffer("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
+      ByteBuffer signature =
+          fromHexToByteBuffer(
               "d137e35f4da1beb4e6628c3af3eeeb335ea769c7ed8489e7aecfdd4fcd4b6207"
                   + "5816f7bb8ae0687e6ce8cf4ae6af52ee5db55981d4ae664101fa32596c281f0d");
 
-      byte[] message = null;
+      ByteBuffer message = null;
 
-      int result = mc.crypto_eddsa_check(signature, public_key, message);
+      int result = crypto_eddsa_check(signature, public_key, message);
 
       int expected = 0;
 
@@ -116,16 +114,16 @@ public class EddsaTest {
 
     // crypto_eddsa_check happy path
     {
-      byte[] public_key =
-          fromHexToByteArray("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
-      byte[] signature =
-          fromHexToByteArray(
+      ByteBuffer public_key =
+          fromHexToByteBuffer("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
+      ByteBuffer signature =
+          fromHexToByteBuffer(
               "655434d6865d08dff59d21e4623e03fac0023e456b9110a01a1befddc6a4ab0e"
                   + "b689e628815958b1ef75086c7d56575636b1eb5b58eb83c9e4fa6443f08ccc07");
 
-      byte[] message = fromHexToByteArray("0001020304050607");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
 
-      int result = mc.crypto_eddsa_check(signature, public_key, message);
+      int result = crypto_eddsa_check(signature, public_key, message);
 
       int expected = 0;
 
@@ -134,16 +132,16 @@ public class EddsaTest {
 
     // crypto_eddsa_check happy path
     {
-      byte[] public_key =
-          fromHexToByteArray("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
-      byte[] signature =
-          fromHexToByteArray(
+      ByteBuffer public_key =
+          fromHexToByteBuffer("f65333fa6303b6a23defd7de2af8aa461cb047ccbf12d4edd29ef3b1eba6706b");
+      ByteBuffer signature =
+          fromHexToByteBuffer(
               "0000000000000000000000000000000000000000000000000000000000000000"
                   + "0000000000000000000000000000000000000000000000000000000000000000");
 
-      byte[] message = fromHexToByteArray("0001020304050607");
+      ByteBuffer message = fromHexToByteBuffer("0001020304050607");
 
-      int result = mc.crypto_eddsa_check(signature, public_key, message);
+      int result = crypto_eddsa_check(signature, public_key, message);
 
       int expected = -1;
 
@@ -156,11 +154,11 @@ public class EddsaTest {
   public void test_crypto_eddsa_to_x25519() {
     // crypto_eddsa_to_x25519 happy path
     {
-      byte[] eddsa =
-          fromHexToByteArray("752f61d0e2d2e7577f2aafa6a92298b86bb32521d6d7f109dcd834fc41f2a72a");
-      byte[] x25519 = new byte[32];
+      ByteBuffer eddsa =
+          fromHexToByteBuffer("752f61d0e2d2e7577f2aafa6a92298b86bb32521d6d7f109dcd834fc41f2a72a");
+      ByteBuffer x25519 = ByteBuffer.allocateDirect(32);
 
-      mc.crypto_eddsa_to_x25519(x25519, eddsa);
+      crypto_eddsa_to_x25519(x25519, eddsa);
 
       String expected = "df6baf6f6a43b9744fc5ef9dea1122782f9f696dc4a0d15c03c1787ee6d15e64";
       String actual = toHex(x25519);
@@ -169,82 +167,59 @@ public class EddsaTest {
     }
   }
 
-  @Test
-  @Order(30)
-  public void test_crypto_trim_scalar() {
-    // crypto_trim_scalar happy path
-    {
-      byte[] in =
-          fromHexToByteArray("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-      byte[] out = new byte[32];
+  private static ByteBuffer buf(int len) {
+    return ByteBuffer.allocateDirect(len);
+  }
 
-      mc.crypto_eddsa_trim_scalar(out, in);
-
-      String expected = "f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f";
-      String actual = toHex(out);
-
-      assertEquals(expected, actual, "out mismatch");
-    }
+  private static ByteBuffer counting(int len, int start) {
+    ByteBuffer b = buf(len);
+    for (int i = 0; i < len; i++) b.put(i, (byte) (start + i));
+    return b;
   }
 
   @Test
-  @Order(31)
-  public void test_crypto_eddsa_reduce() {
-    // crypto_eddsa_reduce happy path
-    {
-      byte[] expanded =
-          fromHexToByteArray(
-              "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-                  + "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-      byte[] reduced = new byte[32];
-      ;
+  @Order(100)
+  public void test_sign_and_check_round_trip() {
+    ByteBuffer sk = buf(64);
+    ByteBuffer pk = buf(32);
+    crypto_eddsa_key_pair(sk, pk, counting(32, 3));
 
-      mc.crypto_eddsa_reduce(reduced, expanded);
+    ByteBuffer message = counting(40, 0);
+    message.position(8);
+    ByteBuffer signature = buf(64);
+    crypto_eddsa_sign(signature, sk, message);
+    assertEquals(8, message.position());
+    assertEquals(0, crypto_eddsa_check(signature, pk, message));
 
-      String expected = "000f9c44e31106a447938568a71b0ed065bef517d273ecce3d9a307c1b419903";
-      String actual = toHex(reduced);
+    message.put(10, (byte) (message.get(10) ^ 1));
+    assertEquals(-1, crypto_eddsa_check(signature, pk, message));
 
-      assertEquals(expected, actual, "reduced mismatch");
-    }
+    ByteBuffer empty = buf(64);
+    crypto_eddsa_sign(empty, sk, null);
+    assertEquals(0, crypto_eddsa_check(empty, pk, null));
   }
 
   @Test
-  @Order(32)
-  public void test_crypto_eddsa_mul_add() {
-    // crypto_eddsa_mul_add happy path
-    {
-      byte[] a =
-          fromHexToByteArray("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-      byte[] b =
-          fromHexToByteArray("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-      byte[] c =
-          fromHexToByteArray("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
-      byte[] r = new byte[32];
+  @Order(101)
+  public void test_key_pair_wipes_seed_and_needs_it_writable() {
+    ByteBuffer seed = counting(32, 3);
+    crypto_eddsa_key_pair(buf(64), buf(32), seed);
+    for (int i = 0; i < 32; i++) assertEquals(0, seed.get(i));
 
-      mc.crypto_eddsa_mul_add(r, a, b, c);
-
-      String expected = "2a05f60b2d496b1b6c6223f3c345190ee88483d888cca6371eacab86796f7802";
-      String actual = toHex(r);
-
-      assertEquals(expected, actual, "r mismatch");
-    }
+    ByteBuffer readOnly = counting(32, 3).asReadOnlyBuffer();
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class, () -> crypto_eddsa_key_pair(buf(64), buf(32), readOnly));
+    assertEquals("seed must not be read-only", e.getMessage());
   }
 
   @Test
-  @Order(33)
-  public void test_crypto_eddsa_scalarbase() {
-    // crypto_eddsa_scalarbase happy path
-    {
-      byte[] scalar =
-          fromHexToByteArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
-      byte[] point = new byte[32];
-
-      mc.crypto_eddsa_scalarbase(point, scalar);
-
-      String expected = "ca4a448c3fc4d04945da9fdf920976c05e9bbe3d8cebb1858ea44d587c5e63c3";
-      String actual = toHex(point);
-
-      assertEquals(expected, actual, "point mismatch");
-    }
+  @Order(102)
+  public void test_eddsa_rejects_bad_sizes() {
+    assertThrows(
+        IllegalArgumentException.class, () -> crypto_eddsa_key_pair(buf(32), buf(32), buf(32)));
+    assertThrows(IllegalArgumentException.class, () -> crypto_eddsa_sign(buf(63), buf(64), null));
+    assertThrows(IllegalArgumentException.class, () -> crypto_eddsa_check(buf(64), buf(31), null));
+    assertThrows(IllegalArgumentException.class, () -> crypto_eddsa_to_x25519(buf(32), buf(64)));
   }
 }

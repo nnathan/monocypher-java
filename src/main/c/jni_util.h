@@ -51,6 +51,12 @@ bool mc_input_opt(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
  */
 bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out);
 
+/* mc_input followed by mc_require_len, for fixed-size arguments. */
+bool mc_input_len(JNIEnv *env, jobject bb, const char *name, size_t len, mc_buf *out);
+
+/* mc_output followed by mc_require_len, for fixed-size arguments. */
+bool mc_output_len(JNIEnv *env, jobject bb, const char *name, size_t len, mc_buf *out);
+
 /* Throws IllegalArgumentException with "<name> <problem>". Always returns false. */
 bool mc_throw_iae(JNIEnv *env, const char *name, const char *problem);
 

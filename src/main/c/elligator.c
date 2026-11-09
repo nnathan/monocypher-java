@@ -1,80 +1,55 @@
 #include "jni_util.h"
 
+/* No overlap checks: the manual and upstream tests allow overlapping buffers. */
+
 JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair(
-    JNIEnv *env,
-    jobject obj,
-    jbyteArray hidden,
-    jbyteArray secret_key,
-    jbyteArray seed) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair(JNIEnv *env,
+                                                                      jclass cls,
+                                                                      jobject j_hidden,
+                                                                      jobject j_secret_key,
+                                                                      jobject j_seed) {
+  (void)cls;
 
-  CHECK_NULL(hidden, );
-  CHECK_NULL(secret_key, );
-  CHECK_NULL(seed, );
+  /* Monocypher wipes the seed, so it is written to like an output. */
+  mc_buf hidden, secret_key, seed;
+  if (!mc_output_len(env, j_hidden, "hidden", 32, &hidden)) return;
+  if (!mc_output_len(env, j_secret_key, "secret_key", 32, &secret_key)) return;
+  if (!mc_output_len(env, j_seed, "seed", 32, &seed)) return;
 
-  ENSURE_ARRAY_LENGTH(hidden, 32, );
-  ENSURE_ARRAY_LENGTH(secret_key, 32, );
-  ENSURE_ARRAY_LENGTH(seed, 32, );
-
-  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
-  jbyte *secret_key_ptr = (*env)->GetByteArrayElements(env, secret_key, NULL);
-  jbyte *seed_ptr = (*env)->GetByteArrayElements(env, seed, NULL);
-
-  crypto_elligator_key_pair((uint8_t *)hidden_ptr, (uint8_t *)secret_key_ptr,
-                            (uint8_t *)seed_ptr);
-
-  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, secret_key, secret_key_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, seed, seed_ptr, 0);
+  crypto_elligator_key_pair(hidden.ptr, secret_key.ptr, seed.ptr);
 }
 
 JNIEXPORT jint JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev(
-    JNIEnv *env,
-    jobject obj,
-    jbyteArray hidden,
-    jbyteArray curve,
-    jbyte tweak) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev(JNIEnv *env,
+                                                                jclass cls,
+                                                                jobject j_hidden,
+                                                                jobject j_curve,
+                                                                jint tweak) {
+  (void)cls;
 
-  CHECK_NULL(hidden, -1);
-  CHECK_NULL(curve, -1);
+  /* The C tweak is a uint8_t; truncating a larger value would change its meaning. */
+  if (tweak < 0 || tweak > 255) {
+    mc_throw_iae(env, "tweak", "must be between 0 and 255");
+    return -1;
+  }
 
-  ENSURE_ARRAY_LENGTH(hidden, 32, -1);
-  ENSURE_ARRAY_LENGTH(curve, 32, -1);
+  mc_buf hidden, curve;
+  if (!mc_output_len(env, j_hidden, "hidden", 32, &hidden)) return -1;
+  if (!mc_input_len(env, j_curve, "curve", 32, &curve)) return -1;
 
-  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
-  jbyte *curve_ptr = (*env)->GetByteArrayElements(env, curve, NULL);
-
-  int result = crypto_elligator_rev((uint8_t *)hidden_ptr,
-                                    (const uint8_t *)curve_ptr, (uint8_t)tweak);
-
-  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, curve, curve_ptr, JNI_ABORT);
-
-  return result;
+  return crypto_elligator_rev(hidden.ptr, curve.ptr, (uint8_t)tweak);
 }
 
 JNIEXPORT void JNICALL
-Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1map(
-    JNIEnv *env,
-    jobject obj,
-    jbyteArray curve,
-    jbyteArray hidden) {
-  (void)obj;
+Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1map(JNIEnv *env,
+                                                                jclass cls,
+                                                                jobject j_curve,
+                                                                jobject j_hidden) {
+  (void)cls;
 
-  CHECK_NULL(curve, );
-  CHECK_NULL(hidden, );
+  mc_buf curve, hidden;
+  if (!mc_output_len(env, j_curve, "curve", 32, &curve)) return;
+  if (!mc_input_len(env, j_hidden, "hidden", 32, &hidden)) return;
 
-  ENSURE_ARRAY_LENGTH(curve, 32, );
-  ENSURE_ARRAY_LENGTH(hidden, 32, );
-
-  jbyte *hidden_ptr = (*env)->GetByteArrayElements(env, hidden, NULL);
-  jbyte *curve_ptr = (*env)->GetByteArrayElements(env, curve, NULL);
-
-  crypto_elligator_map((uint8_t *)curve_ptr, (const uint8_t *)hidden_ptr);
-
-  (*env)->ReleaseByteArrayElements(env, curve, curve_ptr, 0);
-  (*env)->ReleaseByteArrayElements(env, hidden, hidden_ptr, JNI_ABORT);
+  crypto_elligator_map(curve.ptr, hidden.ptr);
 }

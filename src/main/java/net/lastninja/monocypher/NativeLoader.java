@@ -12,9 +12,13 @@ import java.util.Locale;
 final class NativeLoader {
   private static final String LIBRARY_PATH_PROPERTY = "monocypher.library.path";
 
+  private static boolean loaded;
+
   private NativeLoader() {}
 
-  static void load() {
+  /** Safe to call more than once: Monocypher and Hazmat both call it. */
+  static synchronized void load() {
+    if (loaded) return;
     String override = System.getProperty(LIBRARY_PATH_PROPERTY);
     if (override != null) {
       System.load(override);
@@ -23,6 +27,7 @@ final class NativeLoader {
     } else {
       System.load(extract("/native/" + target() + "/" + libraryName()));
     }
+    loaded = true;
   }
 
   static String target() {

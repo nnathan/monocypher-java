@@ -104,6 +104,14 @@ bool mc_output(JNIEnv *env, jobject bb, const char *name, mc_buf *out) {
   return true;
 }
 
+bool mc_input_len(JNIEnv *env, jobject bb, const char *name, size_t len, mc_buf *out) {
+  return mc_input(env, bb, name, out) && mc_require_len(env, out, name, len);
+}
+
+bool mc_output_len(JNIEnv *env, jobject bb, const char *name, size_t len, mc_buf *out) {
+  return mc_output(env, bb, name, out) && mc_require_len(env, out, name, len);
+}
+
 bool mc_require_len(JNIEnv *env, const mc_buf *b, const char *name, size_t len) {
   if (b->len == len) return true;
 

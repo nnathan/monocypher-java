@@ -196,114 +196,82 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1argon2
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519_public_key
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1public_1key
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519_to_eddsa
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1to_1eddsa
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519_inverse
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1inverse
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519_dirty_small
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1small
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_x25519_dirty_fast
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1x25519_1dirty_1fast
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_eddsa_key_pair
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1key_1pair
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_eddsa_sign
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1sign
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_eddsa_check
- * Signature: ([B[B[B)I
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1check
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_eddsa_to_x25519
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1to_1x25519
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
-
-/*
- * Class:     net_lastninja_monocypher_Monocypher
- * Method:    crypto_eddsa_trim_scalar
- * Signature: ([B[B)V
- */
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1trim_1scalar
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
-
-/*
- * Class:     net_lastninja_monocypher_Monocypher
- * Method:    crypto_eddsa_reduce
- * Signature: ([B[B)V
- */
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1reduce
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
-
-/*
- * Class:     net_lastninja_monocypher_Monocypher
- * Method:    crypto_eddsa_mul_add
- * Signature: ([B[B[B[B)V
- */
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1mul_1add
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
-
-/*
- * Class:     net_lastninja_monocypher_Monocypher
- * Method:    crypto_eddsa_scalarbase
- * Signature: ([B[B)V
- */
-JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1eddsa_1scalarbase
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
@@ -388,26 +356,26 @@ JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1wipe__Ln
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_elligator_key_pair
- * Signature: ([B[B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1key_1pair
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_elligator_rev
- * Signature: ([B[BB)I
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;I)I
  */
 JNIEXPORT jint JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1rev
-  (JNIEnv *, jobject, jbyteArray, jbyteArray, jbyte);
+  (JNIEnv *, jclass, jobject, jobject, jint);
 
 /*
  * Class:     net_lastninja_monocypher_Monocypher
  * Method:    crypto_elligator_map
- * Signature: ([B[B)V
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
  */
 JNIEXPORT void JNICALL Java_net_lastninja_monocypher_Monocypher_crypto_1elligator_1map
-  (JNIEnv *, jobject, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jobject, jobject);
 
 #ifdef __cplusplus
 }
