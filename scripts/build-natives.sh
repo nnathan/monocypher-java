@@ -84,7 +84,6 @@ if [ "$1" = android ]; then
   finish
 fi
 
-job zig_build linux-x86         $SO unix x86-linux-gnu.2.17
 job zig_build linux-x86_64      $SO unix x86_64-linux-gnu.2.17
 job zig_build linux-arm64       $SO unix aarch64-linux-gnu.2.17
 job zig_build linux-armv6       $SO unix arm-linux-gnueabihf.2.17 -mcpu=arm1176jzf_s
