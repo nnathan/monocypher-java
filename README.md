@@ -1,5 +1,8 @@
 # monocypher-java
 
+[![Maven Central](https://img.shields.io/maven-central/v/net.lastninja.monocypher/monocypher-java)](https://central.sonatype.com/artifact/net.lastninja.monocypher/monocypher-java)
+[![javadoc](https://javadoc.io/badge/net.lastninja.monocypher/monocypher-java.svg)](https://javadoc.io/doc/net.lastninja.monocypher/monocypher-java)
+
 monocypher-java provides JNI bindings for [Monocypher](https://monocypher.org/),
 for Java 8 and later and for Android, with no runtime dependencies.
 
