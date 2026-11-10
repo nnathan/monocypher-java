@@ -5,8 +5,25 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.lastninja.monocypher</groupId>
     <artifactId>monocypher-java</artifactId>
-    <version>1.0.0</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
+
+    <name>monocypher-java</name>
+    <description>monocypher-java provides effortless bindings to the Monocypher cryptography library</description>
+    <url>https://github.com/nnathan/monocypher-java</url>
+
+    <developers>
+        <developer>
+          <name>Naveen Nathan</name>
+          <email>naveen@lastninja.net</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/nnathan/monocypher-java.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/nnathan/monocypher-java.git</developerConnection>
+        <url>https://github.com/nnathan/monocypher-java</url>
+    </scm>
 
     <licenses>
         <license>
@@ -38,6 +55,20 @@
               <excludes>
                 <exclude>android-*/**</exclude>
               </excludes>
+            </resource>
+            <resource>
+              <directory>${project.basedir}</directory>
+              <targetPath>META-INF</targetPath>
+              <includes>
+                <include>LICENSE</include>
+              </includes>
+            </resource>
+            <resource>
+              <directory>vendor/monocypher</directory>
+              <targetPath>META-INF/monocypher</targetPath>
+              <includes>
+                <include>LICENCE.md</include>
+              </includes>
             </resource>
         </resources>
         <plugins>

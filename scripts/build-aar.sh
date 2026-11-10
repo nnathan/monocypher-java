@@ -7,7 +7,7 @@ AAR=build/aar
 rm -rf "$AAR" build/monocypher-android.aar
 mkdir -p "$AAR"
 
-jar cf "$AAR/classes.jar" -C target/classes net
+jar cf "$AAR/classes.jar" -C target/classes net -C target/classes META-INF
 : >"$AAR/R.txt"
 cat >"$AAR/AndroidManifest.xml" <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
