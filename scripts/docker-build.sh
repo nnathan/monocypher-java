@@ -20,5 +20,5 @@ native_platform="linux/$(docker version --format '{{.Server.Arch}}')"
 run_in "$native_platform" monocypher-java-zig 'scripts/build-natives.sh zig'
 run_in linux/amd64 monocypher-java-ndk 'scripts/build-natives.sh android'
 run_in "$native_platform" "$MAVEN_IMAGE" \
-  'mvn -B -q -Dmaven.repo.local=/work/build/.m2 package && cp target/monocypher-java-*[0-9].jar build/monocypher-java.jar && scripts/build-aar.sh'
+  'mvn -B -q -Dmaven.repo.local=/work/build/.m2 package && cp "$(ls target/monocypher-java-*.jar | grep -Ev "(sources|javadoc)\.jar$")" build/monocypher-java.jar && scripts/build-aar.sh'
 run_in "$native_platform" monocypher-java-zig 'javac -cp build/monocypher-java.jar -d build/smoke smoke/Smoke.java'

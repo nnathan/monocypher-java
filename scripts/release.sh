@@ -19,9 +19,17 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 gpg --list-secret-keys "$SIGNING_KEY" >/dev/null
 
+# The project version is the first <version> in the pom.
+version=$(awk -F'[<>]' '/<version>/ {print $3; exit}' pom.xml)
+case "$version" in
+  *-SNAPSHOT)
+    echo "$version is a snapshot, which Maven Central does not accept. Set a release version first." >&2
+    exit 1
+    ;;
+esac
+
 scripts/docker-build.sh
 
-version=$(sed -n 's/^version=//p' target/maven-archiver/pom.properties)
 name="monocypher-java-$version"
 dir="net/lastninja/monocypher/monocypher-java/$version"
 bundle="build/$name-bundle.zip"
