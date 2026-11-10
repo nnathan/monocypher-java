@@ -283,7 +283,7 @@ It includes [Monocypher](https://monocypher.org/), which is compiled into the
 native libraries in the jar and the AAR. Monocypher is copyright Loup Vaillant,
 Michael Savage and Fabio Scotoni, and is dual-licensed under your choice of the
 2-clause BSD licence or CC0 1.0 Universal. See
-[`vendor/monocypher/LICENCE.md`](vendor/monocypher/LICENCE.md).
+[Monocypher's licence](https://github.com/LoupVaillant/Monocypher/blob/4.0.3/LICENCE.md).
 
 The jar and the AAR include both licences, as `META-INF/LICENSE` and
 `META-INF/monocypher/LICENCE.md`.
