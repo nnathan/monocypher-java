@@ -46,6 +46,52 @@ The bindings differ from C in these ways:
 Rules that cannot be checked, such as never reusing a nonce with the same key,
 are still the caller's responsibility.
 
+## Installation
+
+monocypher-java is on Maven Central. The API is not yet stable, so expect
+changes between 0.x versions.
+
+With Maven:
+
+```xml
+<dependency>
+  <groupId>net.lastninja.monocypher</groupId>
+  <artifactId>monocypher-java</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+With Gradle:
+
+```kotlin
+implementation("net.lastninja.monocypher:monocypher-java:0.1.0")
+```
+
+For Android, download `monocypher-android.aar` from the
+[releases page](https://github.com/nnathan/monocypher-java/releases), put it in
+your module's `libs` folder, and add:
+
+```kotlin
+implementation(files("libs/monocypher-android.aar"))
+```
+
+Use the AAR instead of the jar on Android, not alongside it, as both contain the
+same classes.
+
+Releases are signed with this key:
+
+```
+5F78 B3CA 429A 65F2 62B0  E3D2 7CD6 F762 D57F 5184
+Naveen Nathan <naveen@lastninja.net>
+```
+
+To check a downloaded AAR, fetch the key and verify its `.asc` signature:
+
+```
+gpg --keyserver hkps://keys.openpgp.org --recv-keys 5F78B3CA429A65F262B0E3D27CD6F762D57F5184
+gpg --verify monocypher-android.aar.asc monocypher-android.aar
+```
+
 ## Platforms
 
 `monocypher-java.jar` contains native libraries for these platforms, and loads
