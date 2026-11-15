@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <name>monocypher-java</name>
-    <description>monocypher-java provides effortless bindings to the Monocypher cryptography library</description>
+    <description>JNI bindings for the Monocypher cryptography library, for Java 8+ and Android: authenticated encryption (XChaCha20-Poly1305), hashing (BLAKE2b, SHA-512), password hashing (Argon2), key exchange (X25519), signatures (EdDSA, Ed25519) and Elligator 2.</description>
     <url>https://github.com/nnathan/monocypher-java</url>
 
     <developers>
