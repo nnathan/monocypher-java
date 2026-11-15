@@ -60,14 +60,14 @@ With Maven:
 <dependency>
   <groupId>net.lastninja.monocypher</groupId>
   <artifactId>monocypher-java</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 ```
 
 With Gradle:
 
 ```kotlin
-implementation("net.lastninja.monocypher:monocypher-java:0.1.0")
+implementation("net.lastninja.monocypher:monocypher-java:0.1.1")
 ```
 
 For Android, download `monocypher-android.aar` from the
